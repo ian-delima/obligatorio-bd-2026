@@ -6,7 +6,7 @@ Permite organizar el fixture, registrar resultados, planillas y sanciones, y gen
 
 ## Integrantes
 
-- Ian
+- Ian de Lima
 - Santiago Ripa
 - Valentín Guerrico
 
