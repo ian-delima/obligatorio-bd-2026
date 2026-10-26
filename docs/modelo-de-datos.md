@@ -43,3 +43,30 @@
 ## Sanciones
 
 - **sancion_jugador**: **id_sancion**, *ci_jugador* (jugador), *id_torneo* (torneo), motivo, numero_fecha_inicio, cantidad_fechas
+
+
+## Diagrama de relaciones
+
+```mermaid
+erDiagram
+    facultad ||--o{ jugador : "pertenece"
+    facultad ||--o{ equipo : "representa"
+    torneo ||--o{ equipo : "participa"
+    jugador ||--o{ equipo : "capitanea"
+    equipo ||--|{ equipo_jugador_torneo : "plantel"
+    jugador ||--o{ equipo_jugador_torneo : "integra"
+    torneo ||--o{ equipo_jugador_torneo : "edicion"
+    complejo ||--|{ cancha : "tiene"
+    torneo ||--o{ partido : "incluye"
+    equipo ||--o{ partido : "local"
+    equipo ||--o{ partido : "visitante"
+    turno ||--o{ partido : "horario"
+    cancha ||--o{ partido : "sede"
+    partido ||--o{ planilla_partido : "planilla"
+    jugador ||--o{ planilla_partido : "juega"
+    equipo ||--o{ planilla_partido : "por"
+    planilla_partido ||--o{ gol : "convierte"
+    planilla_partido ||--o{ tarjeta : "recibe"
+    jugador ||--o{ sancion_jugador : "sancionado"
+    torneo ||--o{ sancion_jugador : "en"
+```
