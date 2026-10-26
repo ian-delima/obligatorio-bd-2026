@@ -176,6 +176,25 @@ AI = AUTO_INCREMENT (la base asigna el número automáticamente)
 | numero_fecha_inicio | INT |
 | cantidad_fechas | TINYINT |
 
+## Columnas obligatorias y valores por defecto
+
+Todas las columnas son obligatorias (NOT NULL), salvo:
+
+| Columna | Motivo |
+|---|---|
+| equipo.ci_capitan | El equipo se crea antes que su plantel; el capitán se asigna después de cargar los jugadores. |
+| jugador.email | Dato de contacto no esencial para el torneo. |
+| equipo_jugador_torneo.numero_camiseta | Puede definirse después de la inscripción. |
+
+Valores por defecto (DEFAULT):
+
+| Columna | Valor |
+|---|---|
+| torneo.estado | 'inscripcion' |
+| partido.estado | 'programado' |
+| gol.autogol | FALSE |
+| cancha.techada | FALSE |
+
 ## Diagrama de relaciones
 
 ```mermaid
