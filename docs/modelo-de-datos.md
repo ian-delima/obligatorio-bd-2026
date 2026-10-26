@@ -195,6 +195,35 @@ Valores por defecto (DEFAULT):
 | gol.autogol | FALSE |
 | cancha.techada | FALSE |
 
+## Restricciones adicionales
+
+No se agregan tablas ni columnas respecto a la letra. El momento de un partido se obtiene de partido.dia + turno.hora_fin, suficiente para las reglas de "partido ya disputado" y "corrección dentro de 48 horas".
+
+### Valores que no se pueden repetir (UNIQUE)
+
+| Tabla | Columnas | Motivo |
+|---|---|---|
+| torneo | anio, semestre | Una edición por semestre |
+| equipo | nombre, id_torneo | Nombres de equipo únicos por edición |
+| equipo_jugador_torneo | ci_jugador, id_torneo | Un jugador en un solo equipo por edición |
+| equipo_jugador_torneo | id_equipo, numero_camiseta | Números de camiseta únicos por equipo |
+| facultad | nombre | Evita facultades duplicadas |
+| turno | hora_inicio | Evita turnos duplicados |
+
+### Condiciones que deben cumplirse (CHECK)
+
+| Tabla | Condición |
+|---|---|
+| partido | id_equipo_local distinto de id_equipo_visitante |
+| partido | numero_fecha >= 1 |
+| torneo | semestre en (1, 2) |
+| torneo | fecha_fin > fecha_inicio |
+| turno | hora_fin > hora_inicio |
+| gol | minuto entre 0 y 60 |
+| tarjeta | minuto entre 0 y 60 |
+| sancion_jugador | cantidad_fechas >= 1 |
+| sancion_jugador | numero_fecha_inicio >= 1 |
+
 ## Diagrama de relaciones
 
 ```mermaid
