@@ -207,228 +207,6 @@ VALUES
 (1, 3, 2, 4, '2026-10-24', 2, 'Cancha 2', 1, 'jugado'),
 (1, 3, 3, 6, '2026-10-24', 3, 'Cancha 1', 2, 'jugado');
 
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(2, 90000011, 3),
-(2, 90000012, 3),
-(2, 90000013, 3),
-(2, 90000014, 3),
-(2, 90000015, 3),
-
-(2, 90000016, 4),
-(2, 90000017, 4),
-(2, 90000018, 4),
-(2, 90000019, 4),
-(2, 90000020, 4);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(3, 90000021, 5),
-(3, 90000022, 5),
-(3, 90000023, 5),
-(3, 90000024, 5),
-(3, 90000025, 5),
-
-(3, 90000026, 6),
-(3, 90000027, 6),
-(3, 90000028, 6),
-(3, 90000029, 6),
-(3, 90000030, 6);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(4, 90000001, 1),
-(4, 90000002, 1),
-(4, 90000003, 1),
-(4, 90000004, 1),
-(4, 90000005, 1),
-
-(4, 90000011, 3),
-(4, 90000012, 3),
-(4, 90000013, 3),
-(4, 90000014, 3),
-(4, 90000015, 3);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(5, 90000006, 2),
-(5, 90000007, 2),
-(5, 90000008, 2),
-(5, 90000009, 2),
-(5, 90000010, 2),
-
-(5, 90000021, 5),
-(5, 90000022, 5),
-(5, 90000023, 5),
-(5, 90000024, 5),
-(5, 90000025, 5);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(6, 90000016, 4),
-(6, 90000017, 4),
-(6, 90000018, 4),
-(6, 90000019, 4),
-(6, 90000020, 4),
-
-(6, 90000026, 6),
-(6, 90000027, 6),
-(6, 90000028, 6),
-(6, 90000029, 6),
-(6, 90000030, 6);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(7, 90000001, 1),
-(7, 90000002, 1),
-(7, 90000003, 1),
-(7, 90000004, 1),
-(7, 90000005, 1),
-
-(7, 90000021, 5),
-(7, 90000022, 5),
-(7, 90000023, 5),
-(7, 90000024, 5),
-(7, 90000025, 5);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(8, 90000006, 2),
-(8, 90000007, 2),
-(8, 90000008, 2),
-(8, 90000009, 2),
-(8, 90000010, 2),
-
-(8, 90000016, 4),
-(8, 90000017, 4),
-(8, 90000018, 4),
-(8, 90000019, 4),
-(8, 90000020, 4);
-
-INSERT INTO planilla_partido
-(id_partido, ci_jugador, id_equipo)
-VALUES
-(9, 90000011, 3),
-(9, 90000012, 3),
-(9, 90000013, 3),
-(9, 90000014, 3),
-(9, 90000015, 3),
-
-(9, 90000026, 6),
-(9, 90000027, 6),
-(9, 90000028, 6),
-(9, 90000029, 6),
-(9, 90000030, 6);
-
-/* Insertamos los goles de cada partido*/
-
-    /*Goles Fecha1*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(1, 90000003, 10, FALSE),
-(1, 90000005, 22, FALSE),
-(1, 90000001, 45, FALSE),
-(1, 90000006, 30, FALSE),
-(1, 90000009, 52, FALSE);
-
-    /*Goles Fecha2*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(2, 90000011, 12, FALSE),
-(2, 90000012, 38, FALSE),
-(2, 90000016, 50, FALSE);
-
-    /*Goles Fecha3*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(3, 90000021, 10, FALSE),
-(3, 90000022, 25, FALSE),
-(3, 90000026, 35, FALSE),
-(3, 90000024, 48, TRUE);
-
-    /*Goles Fecha4*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(4, 90000003, 15, FALSE),
-(4, 90000002, 40, FALSE),
-(4, 90000012, 53, FALSE);
-
-    /*Goles Fecha5*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(5, 90000006, 8, FALSE),
-(5, 90000009, 20, FALSE),
-(5, 90000010, 42, FALSE),
-(5, 90000021, 55, FALSE);
-
-    /*Goles Fecha6*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(6, 90000016, 18, FALSE),
-(6, 90000026, 32, FALSE),
-(6, 90000028, 49, FALSE);
-
-    /*Goles Fecha7*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(7, 90000003, 8, FALSE),
-(7, 90000005, 17, FALSE),
-(7, 90000002, 30, FALSE),
-(7, 90000003, 48, FALSE),
-(7, 90000021, 55, FALSE);
-
-    /*Goles Fecha8*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(8, 90000006, 12, FALSE),
-(8, 90000010, 36, FALSE),
-(8, 90000016, 24, FALSE),
-(8, 90000017, 51, FALSE);
-
-    /*Goles Fecha9*/
-INSERT INTO gol
-(id_partido, ci_jugador, minuto, autogol)
-VALUES
-(9, 90000012, 15, FALSE),
-(9, 90000026, 22, FALSE),
-(9, 90000027, 37, FALSE),
-(9, 90000028, 54, FALSE);
-
-
-/*Tarjetas de la fecha 1*/
-INSERT INTO tarjeta
-(id_partido, ci_jugador, minuto, color)
-VALUES
-(1, 90000002, 20, 'amarilla'),
-(1, 90000007, 35, 'amarilla'),
-(2, 90000014, 40, 'roja'),
-(3, 90000023, 25, 'amarilla'),
-
-/*Tarjetas de la fecha 2*/
-(4, 90000002, 30, 'amarilla'),
-(5, 90000007, 45, 'amarilla'),
-(6, 90000020, 50, 'roja'),
-
-/*Tarjetas de la fecha 3*/
-(7, 90000002, 28, 'amarilla'),
-(8, 90000007, 32, 'amarilla'),
-(9, 90000027, 42, 'roja');
-
 /*Insertamos 3 jugadores mas por equipo*/
 INSERT INTO jugador
 (ci, nombre, apellido, fecha_nacimiento, id_facultad, tipo)
@@ -499,23 +277,242 @@ VALUES
 (6, 90000048, 1, 14);
 
 
-/*Agustin Lopez: roja en fecha 1*/
-/*No puede jugar el partido 4*/
-DELETE FROM planilla_partido
-WHERE id_partido = 4 AND ci_jugador = 90000014;
 
 INSERT INTO planilla_partido
 (id_partido, ci_jugador, id_equipo)
-VALUES (4, 90000037, 3);
-
-/*Diego Morales: roja en fecha 2*/
-/*No puede jugar el partido 8*/
-DELETE FROM planilla_partido
-WHERE id_partido = 8 AND ci_jugador = 90000020;
+VALUES
+(1, 90000001, 1),
+(1, 90000002, 1),
+(1, 90000003, 1),
+(1, 90000004, 1),
+(1, 90000005, 1),
+(1, 90000006, 2),
+(1, 90000007, 2),
+(1, 90000008, 2),
+(1, 90000009, 2),
+(1, 90000010, 2);
 
 INSERT INTO planilla_partido
 (id_partido, ci_jugador, id_equipo)
-VALUES (8, 90000040, 4);
+VALUES
+(2, 90000011, 3),
+(2, 90000012, 3),
+(2, 90000013, 3),
+(2, 90000014, 3),
+(2, 90000015, 3),
+
+(2, 90000016, 4),
+(2, 90000017, 4),
+(2, 90000018, 4),
+(2, 90000019, 4),
+(2, 90000020, 4);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(3, 90000021, 5),
+(3, 90000022, 5),
+(3, 90000023, 5),
+(3, 90000024, 5),
+(3, 90000025, 5),
+
+(3, 90000026, 6),
+(3, 90000027, 6),
+(3, 90000028, 6),
+(3, 90000029, 6),
+(3, 90000030, 6);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(4, 90000001, 1),
+(4, 90000002, 1),
+(4, 90000003, 1),
+(4, 90000004, 1),
+(4, 90000005, 1),
+
+(4, 90000011, 3),
+(4, 90000012, 3),
+(4, 90000013, 3),
+(4, 90000037, 3),
+(4, 90000015, 3);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(5, 90000006, 2),
+(5, 90000007, 2),
+(5, 90000008, 2),
+(5, 90000009, 2),
+(5, 90000010, 2),
+
+(5, 90000021, 5),
+(5, 90000022, 5),
+(5, 90000023, 5),
+(5, 90000024, 5),
+(5, 90000025, 5);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(6, 90000016, 4),
+(6, 90000017, 4),
+(6, 90000018, 4),
+(6, 90000019, 4),
+(6, 90000020, 4),
+
+(6, 90000026, 6),
+(6, 90000027, 6),
+(6, 90000028, 6),
+(6, 90000029, 6),
+(6, 90000030, 6);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(7, 90000001, 1),
+(7, 90000002, 1),
+(7, 90000003, 1),
+(7, 90000004, 1),
+(7, 90000005, 1),
+
+(7, 90000021, 5),
+(7, 90000022, 5),
+(7, 90000023, 5),
+(7, 90000024, 5),
+(7, 90000025, 5);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(8, 90000006, 2),
+(8, 90000007, 2),
+(8, 90000008, 2),
+(8, 90000009, 2),
+(8, 90000010, 2),
+
+(8, 90000016, 4),
+(8, 90000017, 4),
+(8, 90000018, 4),
+(8, 90000019, 4),
+(8, 90000040, 4);
+
+INSERT INTO planilla_partido
+(id_partido, ci_jugador, id_equipo)
+VALUES
+(9, 90000011, 3),
+(9, 90000012, 3),
+(9, 90000013, 3),
+(9, 90000014, 3),
+(9, 90000015, 3),
+
+(9, 90000026, 6),
+(9, 90000027, 6),
+(9, 90000028, 6),
+(9, 90000029, 6),
+(9, 90000030, 6);
+
+/* Insertamos los goles de cada partido*/
+
+    /* Goles partido 1 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(1, 90000003, 10, FALSE),
+(1, 90000005, 22, FALSE),
+(1, 90000001, 45, FALSE),
+(1, 90000006, 30, FALSE),
+(1, 90000009, 52, FALSE);
+
+    /* Goles partido 2 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(2, 90000011, 12, FALSE),
+(2, 90000012, 38, FALSE),
+(2, 90000016, 50, FALSE);
+
+    /* Goles partido 3 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(3, 90000021, 10, FALSE),
+(3, 90000022, 25, FALSE),
+(3, 90000026, 35, FALSE),
+(3, 90000024, 48, TRUE);
+
+    /* Goles partido 4 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(4, 90000003, 15, FALSE),
+(4, 90000002, 40, FALSE),
+(4, 90000012, 53, FALSE);
+
+    /* Goles partido 5 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(5, 90000006, 8, FALSE),
+(5, 90000009, 20, FALSE),
+(5, 90000010, 42, FALSE),
+(5, 90000021, 55, FALSE);
+
+    /* Goles partido 6 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(6, 90000016, 18, FALSE),
+(6, 90000026, 32, FALSE),
+(6, 90000028, 49, FALSE);
+
+    /* Goles partido 7 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(7, 90000003, 8, FALSE),
+(7, 90000005, 17, FALSE),
+(7, 90000002, 30, FALSE),
+(7, 90000003, 48, FALSE),
+(7, 90000021, 55, FALSE);
+
+    /* Goles partido 8 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(8, 90000006, 12, FALSE),
+(8, 90000010, 36, FALSE),
+(8, 90000016, 24, FALSE),
+(8, 90000017, 51, FALSE);
+
+    /* Goles partido 9 */
+INSERT INTO gol
+(id_partido, ci_jugador, minuto, autogol)
+VALUES
+(9, 90000012, 15, FALSE),
+(9, 90000026, 22, FALSE),
+(9, 90000027, 37, FALSE),
+(9, 90000028, 54, FALSE);
+
+
+/* Tarjetas de las fechas 1, 2 y 3 */
+INSERT INTO tarjeta
+(id_partido, ci_jugador, minuto, color)
+VALUES
+(1, 90000002, 20, 'amarilla'),
+(1, 90000007, 35, 'amarilla'),
+(2, 90000014, 40, 'roja'),
+(3, 90000023, 25, 'amarilla'),
+
+/*Tarjetas de la fecha 2*/
+(4, 90000002, 30, 'amarilla'),
+(5, 90000007, 45, 'amarilla'),
+(6, 90000020, 50, 'roja'),
+
+/*Tarjetas de la fecha 3*/
+(7, 90000002, 28, 'amarilla'),
+(8, 90000007, 32, 'amarilla'),
+(9, 90000027, 42, 'roja');
 
 /*Agregamos las sanciones en la tabla*/
 INSERT INTO sancion_jugador
@@ -552,4 +549,3 @@ VALUES
 (1, 5, 1, 6, '2026-11-14', 1, 'Cancha 1', 1, 'programado'),
 (1, 5, 2, 3, '2026-11-14', 2, 'Cancha 2', 1, 'programado'),
 (1, 5, 4, 5, '2026-11-14', 3, 'Cancha 1', 2, 'cancelado');
-
