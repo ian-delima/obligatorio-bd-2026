@@ -2,17 +2,27 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash
 from db import conectar
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
+def requiere_rol(*roles):
+    def decorador(funcion):
+        @wraps(funcion)
+        def envoltura(*args, **kwargs):
+            if "rol" not in session:
+                return redirect(url_for("login"))
+            if session["rol"] not in roles:
+                return "No tenés permiso para entrar acá", 403
+            return funcion(*args, **kwargs)
+        return envoltura
+    return decorador
 
 @app.route("/")
+@requiere_rol("administrador", "planillero")
 def inicio():
-    if "rol" not in session:
-        return redirect(url_for("login"))
     return f"Hola {session['correo']}, entraste como {session['rol']}. <a href='/logout'>Salir</a>"
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -45,6 +55,11 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+@app.route("/prueba-admin")
+@requiere_rol("administrador")
+def prueba_admin():
+    return "Si ves esto, sos admin"
 
 if __name__ == "__main__":
     app.run(debug=True)
