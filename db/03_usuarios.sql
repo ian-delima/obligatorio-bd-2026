@@ -3,7 +3,7 @@ IDENTIFIED BY 'contrasena';
 
 GRANT ALL PRIVILEGES
 ON obligatorio_bd.*
-TO 'admin'@'loccalhost';
+TO 'admin'@'localhost';
 
 CREATE USER 'planillero'@'localhost'
 IDENTIFIED BY 'contrasena';
