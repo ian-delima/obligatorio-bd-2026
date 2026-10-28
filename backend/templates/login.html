@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Ingresar - Torneo Interfacultades</title>
+</head>
+<body>
+    <h1>Torneo Interfacultades</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+        <label>Correo
+            <input type="email" name="correo" required>
+        </label>
+        <br>
+        <label>Contraseña
+            <input type="password" name="contrasena" required>
+        </label>
+        <br>
+        <button type="submit">Ingresar</button>
+    </form>
+</body>
+</html>
