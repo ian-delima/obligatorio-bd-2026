@@ -8,7 +8,8 @@ VALUES
 ('planillero@ucu.edu.uy',
  'scrypt:32768:8:1$7oF6hCZGZIfLprvw$de23ae2ee259cfe365796becca1edb6a2e802d3c109f8896c0ee0ed830761ef2debd0bd1224dc84e64209a0ee95eb98010f95ea10929f042b958beb65357ad66',
  'planillero');
- 
+
+
 INSERT INTO facultad (nombre)
 VALUES
 ('Ingenieria'),
@@ -558,3 +559,5 @@ VALUES
 (1, 5, 1, 6, '2026-11-14', 1, 'Cancha 1', 1, 'programado'),
 (1, 5, 2, 3, '2026-11-14', 2, 'Cancha 2', 1, 'programado'),
 (1, 5, 4, 5, '2026-11-14', 3, 'Cancha 1', 2, 'cancelado');
+
+
