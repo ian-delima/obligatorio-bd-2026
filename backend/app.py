@@ -6,6 +6,7 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash
 from mysql.connector import IntegrityError
+from instalaciones import instalaciones_bp
 
 from db import conectar
 from jugadores import (
@@ -18,6 +19,7 @@ from jugadores import (
 
 
 app = Flask(__name__)
+app.register_blueprint(instalaciones_bp)
 app.secret_key = os.getenv("SECRET_KEY")
 
 
