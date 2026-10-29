@@ -1,5 +1,15 @@
 use obligatorio_bd;
 
+INSERT INTO login (correo, contrasena, rol)
+VALUES
+('admin@ucu.edu.uy',
+ 'scrypt:32768:8:1$xJjc0Jy1VJJLVca5$0d00c37be433663100b1e5f299fe69d08ff001b1a3a9412fa5abc676fcd8e6b2a7179e82a3d271af326f38163a8a1c1c678e0c051f6c5b3132dc645c75d17dfc',
+ 'administrador'),
+('planillero@ucu.edu.uy',
+ 'scrypt:32768:8:1$7oF6hCZGZIfLprvw$de23ae2ee259cfe365796becca1edb6a2e802d3c109f8896c0ee0ed830761ef2debd0bd1224dc84e64209a0ee95eb98010f95ea10929f042b958beb65357ad66',
+ 'planillero');
+
+
 INSERT INTO facultad (nombre)
 VALUES
 ('Ingenieria'),
@@ -549,3 +559,5 @@ VALUES
 (1, 5, 1, 6, '2026-11-14', 1, 'Cancha 1', 1, 'programado'),
 (1, 5, 2, 3, '2026-11-14', 2, 'Cancha 2', 1, 'programado'),
 (1, 5, 4, 5, '2026-11-14', 3, 'Cancha 1', 2, 'cancelado');
+
+
