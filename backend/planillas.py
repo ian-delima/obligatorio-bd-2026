@@ -48,6 +48,22 @@ def buscar_partido(cur, id_partido):
     )
     return cur.fetchone()
 
+# Indica si el jugador tiene una sanción que abarca esa fecha del torneo.
+def esta_suspendido(cur, ci, id_torneo, numero_fecha):
+    cur.execute(
+        """
+        SELECT 1
+        FROM sancion_jugador
+        WHERE ci_jugador=%s
+          AND id_torneo=%s
+          AND %s BETWEEN numero_fecha_inicio
+                     AND numero_fecha_inicio + cantidad_fechas - 1
+        LIMIT 1
+        """,
+        (ci, id_torneo, numero_fecha)
+    )
+    return cur.fetchone() is not None   
+
 
 # Agrega un jugador a la planilla, validando que sea del plantel de algún equipo del partido.
 @planillas_bp.post('/partidos/<int:id_partido>/planilla')
@@ -89,6 +105,9 @@ def agregar_a_planilla(id_partido):
         if not fila:
             return {'error': 'El jugador no está en el plantel de ninguno de los dos equipos'}, 409
 
+        if esta_suspendido(cur, ci, partido['id_torneo'], partido['numero_fecha']):
+            return {'error': 'El jugador está suspendido para esta fecha'}, 409
+        
         cur.execute(
             """
             INSERT INTO planilla_partido (id_partido, ci_jugador, id_equipo)
