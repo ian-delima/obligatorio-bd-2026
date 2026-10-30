@@ -199,6 +199,37 @@ def registrar_gol(id_partido):
         return error_bd(e)
     
 
+# Si corresponde, crea la sanción automática por roja o por acumular 3 amarillas.
+def sancion_automatica(cur, ci, partido, color):
+    if color == 'roja':
+        motivo = 'roja'
+    else:
+        cur.execute(
+            """
+            SELECT COUNT(*) AS cantidad
+            FROM tarjeta t
+            JOIN partido p ON p.id_partido = t.id_partido
+            WHERE t.ci_jugador=%s
+              AND p.id_torneo=%s
+              AND t.color='amarilla'
+            """,
+            (ci, partido['id_torneo'])
+        )
+        if cur.fetchone()['cantidad'] % 3 != 0:
+            return None
+        motivo = 'acumulacion de amarillas'
+
+    cur.execute(
+        """
+        INSERT INTO sancion_jugador
+        (ci_jugador, id_torneo, motivo, numero_fecha_inicio, cantidad_fechas)
+        VALUES (%s, %s, %s, %s, 1)
+        """,
+        (ci, partido['id_torneo'], motivo, partido['numero_fecha'] + 1)
+    )
+    return motivo
+    
+
 # Registra una tarjeta a un jugador que figura en la planilla del partido.
 @planillas_bp.post('/partidos/<int:id_partido>/tarjetas')
 @planillero_o_admin
@@ -231,7 +262,11 @@ def registrar_tarjeta(id_partido):
             (id_partido, d['ci_jugador'], d['minuto'], d['color'])
         )
 
-        return {'mensaje': 'Tarjeta registrada', 'id_tarjeta': cur.lastrowid}, 201
+        id_tarjeta = cur.lastrowid
+        sancion = sancion_automatica(cur, d['ci_jugador'], partido, d['color'])
+
+        return {'mensaje': 'Tarjeta registrada', 'id_tarjeta': id_tarjeta, 'sancion': sancion}, 201
+        
 
     try:
         return ejecutar_segun_rol(op)
