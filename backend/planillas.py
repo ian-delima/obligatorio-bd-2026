@@ -64,6 +64,19 @@ def esta_suspendido(cur, ci, id_torneo, numero_fecha):
     )
     return cur.fetchone() is not None   
 
+# Indica si ya pasaron más de 48 horas desde el fin del partido.
+def fuera_de_plazo(cur, id_partido):
+    cur.execute(
+        """
+        SELECT NOW() > TIMESTAMP(p.dia, t.hora_fin) + INTERVAL 48 HOUR AS vencido
+        FROM partido p
+        JOIN turno t ON t.id_turno = p.id_turno
+        WHERE p.id_partido=%s
+        """,
+        (id_partido,)
+    )
+    return bool(cur.fetchone()['vencido'])
+
 
 # Agrega un jugador a la planilla, validando que sea del plantel de algún equipo del partido.
 @planillas_bp.post('/partidos/<int:id_partido>/planilla')
@@ -179,6 +192,9 @@ def registrar_gol(id_partido):
         if partido['estado'] in ('postergado', 'cancelado'):
             return {'error': 'El partido está ' + partido['estado']}, 409
 
+        if fuera_de_plazo(cur, id_partido):
+            return {'error': 'Pasaron más de 48 horas: el resultado ya no se puede corregir'}, 409
+
         cur.execute(
             """
             INSERT INTO gol (id_partido, ci_jugador, minuto, autogol)
@@ -276,3 +292,23 @@ def registrar_tarjeta(id_partido):
         return error_bd(e)
     except DataError as e:
         return error_bd(e)
+    
+
+# Elimina un gol, solo si el partido está dentro del plazo de 48 horas.
+@planillas_bp.delete('/goles/<int:id_gol>')
+@planillero_o_admin
+def eliminar_gol(id_gol):
+    def op(cur):
+        cur.execute('SELECT id_partido FROM gol WHERE id_gol=%s', (id_gol,))
+        gol = cur.fetchone()
+
+        if not gol:
+            return {'error': 'No existe el gol'}, 404
+
+        if fuera_de_plazo(cur, gol['id_partido']):
+            return {'error': 'Pasaron más de 48 horas: el resultado ya no se puede corregir'}, 409
+
+        cur.execute('DELETE FROM gol WHERE id_gol=%s', (id_gol,))
+        return {'mensaje': 'Gol eliminado'}, 200
+
+    return ejecutar_segun_rol(op)
