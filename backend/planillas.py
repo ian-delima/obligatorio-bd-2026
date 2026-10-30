@@ -197,3 +197,47 @@ def registrar_gol(id_partido):
         return error_bd(e)
     except DataError as e:
         return error_bd(e)
+    
+
+# Registra una tarjeta a un jugador que figura en la planilla del partido.
+@planillas_bp.post('/partidos/<int:id_partido>/tarjetas')
+@planillero_o_admin
+def registrar_tarjeta(id_partido):
+    d = request.get_json(silent=True)
+
+    if not isinstance(d, dict) or not entero(d.get('ci_jugador')):
+        return {'error': 'Se requiere ci_jugador (entero positivo)'}, 400
+
+    if not entero(d.get('minuto'), 0, 60):
+        return {'error': 'El minuto debe ser un entero entre 0 y 60'}, 400
+
+    if d.get('color') not in ('amarilla', 'roja'):
+        return {'error': 'El color debe ser amarilla o roja'}, 400
+
+    def op(cur):
+        partido = buscar_partido(cur, id_partido)
+
+        if not partido:
+            return {'error': 'No existe el partido'}, 404
+
+        if partido['estado'] in ('postergado', 'cancelado'):
+            return {'error': 'El partido está ' + partido['estado']}, 409
+
+        cur.execute(
+            """
+            INSERT INTO tarjeta (id_partido, ci_jugador, minuto, color)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (id_partido, d['ci_jugador'], d['minuto'], d['color'])
+        )
+
+        return {'mensaje': 'Tarjeta registrada', 'id_tarjeta': cur.lastrowid}, 201
+
+    try:
+        return ejecutar_segun_rol(op)
+    except IntegrityError as e:
+        if e.errno == 1452:
+            return {'error': 'El jugador no figura en la planilla de este partido'}, 409
+        return error_bd(e)
+    except DataError as e:
+        return error_bd(e)
