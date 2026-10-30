@@ -150,4 +150,50 @@ def ver_planilla(id_partido):
         )
         return {'planilla': cur.fetchall()}, 200
 
+
     return ejecutar_segun_rol(op)
+
+# Registra un gol de un jugador que figura en la planilla del partido.
+@planillas_bp.post('/partidos/<int:id_partido>/goles')
+@planillero_o_admin
+def registrar_gol(id_partido):
+    d = request.get_json(silent=True)
+
+    if not isinstance(d, dict) or not entero(d.get('ci_jugador')):
+        return {'error': 'Se requiere ci_jugador (entero positivo)'}, 400
+
+    if not entero(d.get('minuto'), 0, 60):
+        return {'error': 'El minuto debe ser un entero entre 0 y 60'}, 400
+
+    autogol = d.get('autogol', False)
+
+    if type(autogol) is not bool:
+        return {'error': 'autogol debe ser true o false'}, 400
+
+    def op(cur):
+        partido = buscar_partido(cur, id_partido)
+
+        if not partido:
+            return {'error': 'No existe el partido'}, 404
+
+        if partido['estado'] in ('postergado', 'cancelado'):
+            return {'error': 'El partido está ' + partido['estado']}, 409
+
+        cur.execute(
+            """
+            INSERT INTO gol (id_partido, ci_jugador, minuto, autogol)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (id_partido, d['ci_jugador'], d['minuto'], autogol)
+        )
+
+        return {'mensaje': 'Gol registrado', 'id_gol': cur.lastrowid}, 201
+
+    try:
+        return ejecutar_segun_rol(op)
+    except IntegrityError as e:
+        if e.errno == 1452:
+            return {'error': 'El jugador no figura en la planilla de este partido'}, 409
+        return error_bd(e)
+    except DataError as e:
+        return error_bd(e)
