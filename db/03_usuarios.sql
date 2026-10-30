@@ -23,3 +23,7 @@ TO 'planillero'@'localhost';
 GRANT SELECT
 ON obligatorio_bd.*
 TO 'planillero'@'localhost';
+
+GRANT INSERT
+ON obligatorio_bd.sancion_jugador
+TO 'planillero'@'localhost';
