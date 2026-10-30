@@ -1,0 +1,134 @@
+from functools import wraps
+from flask import Blueprint, request, session, redirect, url_for
+from mysql.connector import IntegrityError, DataError
+from db import conectar
+from torneos_equipos import entero, error_bd
+
+planillas_bp = Blueprint('planillas', __name__)
+
+
+# Permite el acceso a administradores y planilleros.
+def planillero_o_admin(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if 'rol' not in session:
+            return redirect(url_for('login'))
+        if session['rol'] not in ('administrador', 'planillero'):
+            return {'error': 'No tenés permiso para cargar planillas'}, 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+# Ejecuta una operación con el usuario MySQL del rol logueado.
+def ejecutar_segun_rol(fn):
+    conn = conectar(session['rol'])
+    cur = conn.cursor(dictionary=True, buffered=True)
+    try:
+        resultado = fn(cur)
+        conn.commit()
+        return resultado
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+# Devuelve los datos de un partido, o None si no existe.
+def buscar_partido(cur, id_partido):
+    cur.execute(
+        """
+        SELECT id_partido, id_torneo, numero_fecha,
+               id_equipo_local, id_equipo_visitante, estado
+        FROM partido
+        WHERE id_partido=%s
+        """,
+        (id_partido,)
+    )
+    return cur.fetchone()
+
+
+# Agrega un jugador a la planilla, validando que sea del plantel de algún equipo del partido.
+@planillas_bp.post('/partidos/<int:id_partido>/planilla')
+@planillero_o_admin
+def agregar_a_planilla(id_partido):
+    d = request.get_json(silent=True)
+
+    if not isinstance(d, dict) or not entero(d.get('ci_jugador')):
+        return {'error': 'Se requiere ci_jugador (entero positivo)'}, 400
+
+    ci = d['ci_jugador']
+
+    def op(cur):
+        partido = buscar_partido(cur, id_partido)
+
+        if not partido:
+            return {'error': 'No existe el partido'}, 404
+
+        if partido['estado'] in ('postergado', 'cancelado'):
+            return {'error': 'El partido está ' + partido['estado']}, 409
+
+        cur.execute(
+            """
+            SELECT id_equipo
+            FROM equipo_jugador_torneo
+            WHERE ci_jugador=%s
+              AND id_torneo=%s
+              AND id_equipo IN (%s, %s)
+            """,
+            (
+                ci,
+                partido['id_torneo'],
+                partido['id_equipo_local'],
+                partido['id_equipo_visitante']
+            )
+        )
+        fila = cur.fetchone()
+
+        if not fila:
+            return {'error': 'El jugador no está en el plantel de ninguno de los dos equipos'}, 409
+
+        cur.execute(
+            """
+            INSERT INTO planilla_partido (id_partido, ci_jugador, id_equipo)
+            VALUES (%s, %s, %s)
+            """,
+            (id_partido, ci, fila['id_equipo'])
+        )
+
+        return {'mensaje': 'Jugador agregado a la planilla', 'id_equipo': fila['id_equipo']}, 201
+
+    try:
+        return ejecutar_segun_rol(op)
+    except IntegrityError as e:
+        if e.errno == 1062:
+            return {'error': 'El jugador ya figura en la planilla'}, 409
+        return error_bd(e)
+    except DataError as e:
+        return error_bd(e)
+
+
+# Lista los jugadores que figuran en la planilla de un partido.
+@planillas_bp.get('/partidos/<int:id_partido>/planilla')
+@planillero_o_admin
+def ver_planilla(id_partido):
+    def op(cur):
+        if not buscar_partido(cur, id_partido):
+            return {'error': 'No existe el partido'}, 404
+
+        cur.execute(
+            """
+            SELECT p.ci_jugador, j.nombre, j.apellido,
+                   p.id_equipo, e.nombre AS equipo
+            FROM planilla_partido p
+            JOIN jugador j ON j.ci = p.ci_jugador
+            JOIN equipo e ON e.id_equipo = p.id_equipo
+            WHERE p.id_partido=%s
+            ORDER BY e.nombre, j.apellido
+            """,
+            (id_partido,)
+        )
+        return {'planilla': cur.fetchall()}, 200
+
+    return ejecutar_segun_rol(op)

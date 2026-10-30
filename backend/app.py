@@ -8,6 +8,7 @@ from mysql.connector import IntegrityError
 from torneos_equipos import te_bp
 from sanciones import sanciones_bp
 from instalaciones import instalaciones_bp
+from planillas import planillas_bp
 
 from db import conectar
 from jugadores import (
@@ -23,6 +24,7 @@ app = Flask(__name__)
 app.register_blueprint(te_bp)
 app.register_blueprint(sanciones_bp)
 app.register_blueprint(instalaciones_bp)
+app.register_blueprint(planillas_bp)
 app.secret_key = os.getenv("SECRET_KEY")
 
 
