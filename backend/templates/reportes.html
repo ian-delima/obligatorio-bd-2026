@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Reportes - Torneo Interfacultades{% endblock %}
+
+{% set grupos = [
+    ('Pedidos por la letra', [
+        ('posiciones', 'Tabla de posiciones'),
+        ('goleadores', 'Goleadores'),
+        ('fair-play', 'Fair play'),
+        ('promedio-goles-por-fecha', 'Goles por fecha'),
+        ('promedio-goles-edicion', 'Goles en la edición'),
+        ('canchas-mas-usadas', 'Canchas más usadas'),
+        ('turnos-mas-usados', 'Turnos más usados'),
+        ('jugadores-por-facultad', 'Jugadores por facultad'),
+        ('jugadores-sin-jugar', 'Inscriptos que no jugaron'),
+        ('sanciones-por-equipo', 'Sanciones por equipo'),
+        ('estados-partidos', 'Estado de los partidos'),
+    ]),
+    ('Consultas propias', [
+        ('partido-con-mas-goles', 'Partido con más goles'),
+        ('jugadores-mas-tarjetas', 'Jugadores con más tarjetas'),
+        ('equipo-con-mas-goles', 'Equipo más goleador'),
+    ]),
+] %}
+
+{% block contenido %}
+<h1>Reportes</h1>
+
+<div class="reportes">
+    <nav class="menu-reportes">
+        {% for grupo, items in grupos %}
+            <h2>{{ grupo }}</h2>
+            {% for clave, nombre in items %}
+                <button type="button" data-reporte="{{ clave }}">{{ nombre }}</button>
+            {% endfor %}
+        {% endfor %}
+    </nav>
+
+    <section>
+        <h2 id="titulo-reporte"></h2>
+        <div id="tabla-reporte"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COLUMNAS = {
+    nombre: 'Nombre', apellido: 'Apellido', tipo: 'Tipo', cantidad: 'Cantidad',
+    nombre_cancha: 'Cancha', cantidad_partidos: 'Partidos', hora_inicio: 'Desde', hora_fin: 'Hasta',
+    motivo: 'Motivo', cantidad_sanciones: 'Sanciones', estado: 'Estado', porcentaje: '%',
+    cantidad_goles: 'Goles', amarillas: 'Amarillas', rojas: 'Rojas', puntos: 'Puntos',
+    numero_fecha: 'Fecha', promedio_goles: 'Promedio por partido', DG: 'Dif.',
+    equipo_local: 'Local', equipo_visitante: 'Visitante', goles_local: 'Goles local',
+    goles_visitante: 'Goles visitante', total_goles: 'Total de goles', cantidad_tarjetas: 'Tarjetas',
+};
+
+// Algunas columnas cambian de nombre según el reporte.
+const COLUMNAS_POR_REPORTE = {
+    'canchas-mas-usadas': {nombre: 'Complejo'},
+    'jugadores-por-facultad': {nombre: 'Facultad'},
+    'sanciones-por-equipo': {nombre: 'Equipo'},
+    'fair-play': {nombre: 'Equipo', puntos: 'Puntos (menos es mejor)'},
+    'posiciones': {nombre: 'Equipo'},
+    'equipo-con-mas-goles': {nombre: 'Equipo'},
+};
+
+// Reportes que son un ranking: se numeran y se destaca el primero.
+const RANKINGS = ['posiciones', 'goleadores', 'fair-play', 'jugadores-mas-tarjetas'];
+
+const botones = document.querySelectorAll('[data-reporte]');
+
+// Pone lindos los valores: decimales con coma, horas sin segundos, textos con mayúscula.
+function formatear(v) {
+    if (typeof v === 'string' && /^-?\d+\.\d+$/.test(v)) {
+        return Number(v).toLocaleString('es-UY', {maximumFractionDigits: 2});
+    }
+    if (typeof v === 'string' && /^\d{1,2}:\d{2}:\d{2}$/.test(v)) {
+        return v.slice(0, 5);
+    }
+    if (typeof v === 'string' && /^[a-z]/.test(v)) {
+        return v[0].toUpperCase() + v.slice(1);
+    }
+    return v;
+}
+
+async function mostrar(clave) {
+    const boton = document.querySelector(`[data-reporte="${clave}"]`) || botones[0];
+    clave = boton.dataset.reporte;
+
+    botones.forEach(b => b.classList.toggle('activo', b === boton));
+    document.getElementById('titulo-reporte').textContent = boton.textContent;
+    history.replaceState(null, '', '#' + clave);
+
+    const {filas} = await api('GET', '/reportes/' + clave);
+    const nombres = {...COLUMNAS, ...COLUMNAS_POR_REPORTE[clave]};
+    const ranking = RANKINGS.includes(clave);
+
+    let columnas = filas.length
+        ? Object.keys(filas[0]).map(c => [nombres[c] || c, f => formatear(f[c])])
+        : [];
+    if (ranking) {
+        columnas = [['#', f => filas.indexOf(f) + 1], ...columnas];
+    }
+
+    document.getElementById('tabla-reporte').classList.toggle('podio', ranking);
+    tabla('tabla-reporte', filas, {columnas});
+}
+
+botones.forEach(b => b.onclick = () => mostrar(b.dataset.reporte));
+mostrar(location.hash.slice(1));
+</script>
+{% endblock %}

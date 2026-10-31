@@ -25,6 +25,7 @@ from jugadores import (
 
 
 app = Flask(__name__)
+app.json.sort_keys = False
 app.register_blueprint(te_bp)
 app.register_blueprint(sanciones_bp)
 app.register_blueprint(instalaciones_bp)

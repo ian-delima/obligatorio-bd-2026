@@ -24,3 +24,11 @@ def instalaciones():
 @admin
 def sanciones():
     return render_template('sanciones.html')
+
+
+
+# Pantalla de reportes del torneo.
+@pantallas_bp.get('/reportes')
+@admin
+def reportes():
+    return render_template('reportes.html')

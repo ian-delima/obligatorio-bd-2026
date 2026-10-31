@@ -384,3 +384,17 @@ input[type=checkbox]:checked::after { content: '✓'; font: 700 1.1rem var(--tit
 .motivo.roja::before { background: var(--roja); }
 .motivo.acumulacion::before { background: var(--amarilla); }
 .motivo.disciplinaria::before { background: var(--tablero); }
+
+/* Reportes: menú a la izquierda y tabla a la derecha */
+.reportes { display: grid; grid-template-columns: 250px 1fr; gap: 28px; align-items: start; }
+.menu-reportes { display: grid; gap: 6px; }
+.menu-reportes h2 { font-size: 1.1rem; margin: 14px 0 2px; color: #5b6b80; }
+.menu-reportes h2:first-child { margin-top: 0; }
+.menu-reportes button { margin: 0; text-align: left; font-size: 1.05rem; padding: 6px 12px; }
+.menu-reportes button.activo { background: var(--amarilla); }
+.reportes section h2 { margin-top: 0; }
+#tabla-reporte.podio tbody tr:first-child td { background: #fff1a8; font-weight: 700; }
+
+@media (max-width: 800px) {
+    .reportes { grid-template-columns: 1fr; }
+}
