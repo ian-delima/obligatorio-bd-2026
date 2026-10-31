@@ -1,26 +1,44 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <title>Ingresar - Torneo Interfacultades</title>
-</head>
-<body>
-    <h1>Torneo Interfacultades</h1>
+{% extends 'base.html' %}
 
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
+{% block titulo %}Ingresar - Torneo Interfacultades{% endblock %}
+{% block clase_body %}cancha{% endblock %}
+{% block nav %}{% endblock %}
 
-    <form method="post">
+{% block contenido %}
+<div class="ingreso">
+    <h1>Torneo<br>Interfacultades</h1>
+    <p class="bajada">Fútbol 5 de la UCU</p>
+
+    <form method="post" class="formulario">
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
         <label>Correo
-            <input type="email" name="correo" required>
+            <input type="email" name="correo" maxlength="100" required autofocus>
         </label>
-        <br>
         <label>Contraseña
             <input type="password" name="contrasena" required>
         </label>
-        <br>
-        <button type="submit">Ingresar</button>
+        <button type="submit" class="principal">Ingresar</button>
     </form>
-</body>
-</html>
+</div>
+
+<div class="escena" aria-hidden="true">
+    <div class="corredor rojo"><span class="pixel" data-pixel="rojo"></span><span class="pixel pelota" data-pixel="pelota"></span></div>
+    <div class="corredor azul"><span class="pixel" data-pixel="azul"></span></div>
+</div>
+
+<div class="extras" aria-hidden="true">
+    <div class="arquero izquierda"><span class="pixel" data-pixel="arquero-rojo"></span></div>
+    <div class="arquero derecha"><span class="pixel espejo" data-pixel="arquero-azul"></span></div>
+    <div class="pase">
+        <span class="pixel quieto" data-pixel="rojo"></span>
+        <span class="pixel pelota" data-pixel="pelota"></span>
+        <span class="pixel quieto espejo" data-pixel="rojo"></span>
+    </div>
+    <div class="festejo">
+        <span class="pixel quieto espejo" data-pixel="azul"></span>
+        <span class="pixel quieto espejo" data-pixel="azul"></span>
+    </div>
+</div>
+{% endblock %}

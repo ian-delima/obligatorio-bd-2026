@@ -115,10 +115,7 @@ def validar_textos_jugador(datos):
 @app.route("/")
 @requiere_rol("administrador", "planillero")
 def inicio():
-    return (
-        f"Hola {session['correo']}, entraste como {session['rol']}. "
-        "<a href='/logout'>Salir</a>"
-    )
+    return render_template("inicio.html")
 
 
 @app.route("/login", methods=["GET", "POST"])

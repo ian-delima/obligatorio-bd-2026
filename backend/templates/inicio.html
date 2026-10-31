@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% set fichas = [
+    ('/panel/jugadores', 'Jugadores', 'Alta, edición y baja de jugadores', ['rojo']),
+    ('/panel/torneos', 'Torneos', 'Ediciones y cambio de etapa', ['copa']),
+    ('/panel/equipos', 'Equipos', 'Equipos, planteles y capitanes', ['rojo', 'azul']),
+    ('/panel/instalaciones', 'Complejos y canchas', 'Dónde se juega cada partido', ['cancha']),
+    ('/panel/partidos', 'Partidos', 'Programar, postergar y cancelar', ['pelota']),
+    ('/panel/sanciones', 'Sanciones', 'Suspensiones de jugadores', ['tarjetas']),
+    ('/panel/reportes', 'Reportes', 'Posiciones, goleadores y más', ['barras']),
+] if session.rol == 'administrador' else [] %}
+{% set fichas = fichas + [('/panel/planillas', 'Planillas', 'Jugadores, goles y tarjetas de cada partido', ['planilla'])] %}
+
+{% block contenido %}
+<h1>Hola, {{ session.correo.split('@')[0] }}</h1>
+<p class="bajada-inicio">¿Qué querés gestionar hoy?</p>
+
+<div class="fichas">
+    {% for ruta, nombre, detalle, dibujos in fichas %}
+    <a class="ficha" href="{{ ruta }}">
+        <span class="ficha-dibujo">
+            {% for d in dibujos %}<span class="pixel quieto {{ 'jugador' if d in ['rojo', 'azul'] }}" data-pixel="{{ d }}"></span>{% endfor %}
+        </span>
+        <span class="ficha-nombre">{{ nombre }}</span>
+        <span class="ficha-detalle">{{ detalle }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Torneo Interfacultades{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Press+Start+2P&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body class="{% block clase_body %}{% endblock %}">
+    {% block nav %}
+    {% if session.rol %}
+    {% set secciones = [
+        ('/panel/jugadores', 'Jugadores'),
+        ('/panel/torneos', 'Torneos'),
+        ('/panel/equipos', 'Equipos'),
+        ('/panel/instalaciones', 'Complejos y canchas'),
+        ('/panel/partidos', 'Partidos'),
+        ('/panel/sanciones', 'Sanciones'),
+        ('/panel/reportes', 'Reportes'),
+    ] if session.rol == 'administrador' else [] %}
+    <nav class="barra">
+        <a href="/" class="marca"><span class="pixel" data-pixel="pelota"></span>Torneo Interfacultades</a>
+        {% if request.path != '/' %}
+        <div class="secciones">
+            {% for ruta, nombre in secciones + [('/panel/planillas', 'Planillas')] %}
+                <a href="{{ ruta }}" {% if request.path.startswith(ruta) %}class="activo"{% endif %}>{{ nombre }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="usuario">
+            <span>{{ session.correo }}</span>
+            <a href="/logout">Salir</a>
+        </div>
+    </nav>
+    {% endif %}
+    {% endblock %}
+
+    <main>
+        <div id="mensaje"></div>
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='pixeles.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

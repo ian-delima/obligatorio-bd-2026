@@ -1,0 +1,271 @@
+:root {
+    --cesped: #12923f;
+    --cesped-claro: #1fb04f;
+    --tablero: #0e1f3a;
+    --cal: #ffffff;
+    --fondo: #eef4ea;
+    --linea: #cddbc8;
+    --amarilla: #ffcc00;
+    --roja: #ff3b30;
+    --azul: #2f6bff;
+    --pixel: 'Press Start 2P', monospace;
+    --titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --texto: 'Barlow', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--tablero);
+    font: 400 1rem/1.5 var(--texto);
+}
+
+h1 {
+    font: 400 1.5rem/1.4 var(--pixel);
+    margin: 8px 0 16px;
+}
+h2 { font: 700 1.7rem/1.2 var(--titulos); margin: 28px 0 10px; }
+a { color: var(--cesped); font-weight: 600; }
+
+:focus-visible { outline: 3px solid var(--amarilla); outline-offset: 2px; }
+
+.pixel { display: inline-block; image-rendering: pixelated; }
+.pixel svg { display: block; width: 100%; height: 100%; }
+
+/* Barra superior: césped a franjas con línea de cal */
+.barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 28px;
+    padding: 18px 32px;
+    background: repeating-linear-gradient(90deg, var(--cesped) 0 64px, var(--cesped-claro) 64px 128px);
+    border-bottom: 4px solid var(--cal);
+    box-shadow: 0 4px 0 var(--tablero);
+    font: 600 1.4rem var(--titulos);
+}
+.barra a { color: var(--cal); text-decoration: none; }
+.barra .marca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 400 .95rem var(--pixel);
+    color: var(--amarilla);
+    text-shadow: 2px 2px 0 var(--tablero);
+}
+.barra .marca .pixel { width: 26px; height: 26px; }
+.barra .secciones { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.barra .secciones a { padding: 2px 0; border-bottom: 3px solid transparent; text-shadow: 1px 1px 0 rgba(14, 31, 58, .5); }
+.barra .secciones a:hover { border-bottom-color: var(--cal); }
+.barra .secciones a.activo { border-bottom-color: var(--amarilla); color: var(--amarilla); }
+.barra .usuario { margin-left: auto; display: flex; align-items: center; gap: 14px; font: 500 1.05rem var(--texto); color: #e4f5e8; }
+.barra .usuario a { background: var(--tablero); padding: 6px 14px; font-weight: 600; box-shadow: 3px 3px 0 rgba(14, 31, 58, .35); }
+
+main { max-width: 1180px; margin: 0 auto; padding: 36px 40px; }
+
+/* Inicio: una ficha por sección */
+.bajada-inicio { margin: -6px 0 24px; font: 600 1.4rem var(--titulos); }
+.fichas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; }
+.ficha {
+    display: grid;
+    gap: 2px;
+    padding: 0 0 18px;
+    background: white;
+    border: 3px solid var(--tablero);
+    box-shadow: 6px 6px 0 var(--tablero);
+    color: var(--tablero);
+    text-decoration: none;
+}
+.ficha:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--tablero); }
+.ficha:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--tablero); }
+.ficha-dibujo {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 10px;
+    height: 110px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+    background: repeating-linear-gradient(90deg, var(--cesped) 0 32px, var(--cesped-claro) 32px 64px);
+    border-bottom: 3px solid var(--tablero);
+}
+.ficha-dibujo .pixel { width: 54px; height: 54px; }
+.ficha-dibujo .pixel.jugador { width: 48px; height: 64px; }
+.ficha-nombre { padding: 0 18px; font: 700 1.6rem/1.1 var(--titulos); }
+.ficha-detalle { padding: 0 18px; color: #3b4a5e; }
+.ficha:hover .ficha-nombre { color: var(--cesped); }
+
+/* Tablas: encabezado de tablero con borde amarillo */
+table { width: 100%; border-collapse: collapse; background: white; margin: 12px 0 28px; border: 2px solid var(--tablero); }
+th {
+    background: var(--tablero);
+    color: var(--cal);
+    font: 600 1.1rem var(--titulos);
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 4px solid var(--amarilla);
+}
+td { padding: 8px 10px; border-bottom: 1px solid var(--linea); }
+tr:nth-child(odd) td { background: #f6faf4; }
+tr:hover td { background: #fff7cc; }
+
+/* Formularios y botones con sombra dura de maquinita */
+.formulario {
+    display: grid;
+    gap: 12px;
+    max-width: 420px;
+    background: white;
+    padding: 22px;
+    border: 3px solid var(--tablero);
+    box-shadow: 6px 6px 0 var(--tablero);
+}
+.formulario label { display: grid; gap: 4px; font-weight: 600; }
+
+input, select {
+    font: inherit;
+    padding: 8px 10px;
+    border: 2px solid var(--tablero);
+    background: white;
+}
+input:focus, select:focus { background: #fffbe6; }
+
+button {
+    font: 700 1.1rem var(--titulos);
+    padding: 6px 14px;
+    margin: 0 8px 4px 0;
+    cursor: pointer;
+    color: var(--tablero);
+    background: white;
+    border: 2px solid var(--tablero);
+    box-shadow: 3px 3px 0 var(--tablero);
+}
+button:hover { background: #fff7cc; }
+button:active { transform: translate(3px, 3px); box-shadow: none; }
+button.principal { background: var(--amarilla); }
+button.principal:hover { background: #ffd83d; }
+button.peligro { color: var(--cal); background: var(--roja); }
+.formulario button { margin-right: 0; }
+
+/* Mensajes con forma de tarjeta */
+.error, .ok {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin: 0 0 18px;
+    background: white;
+    border: 2px solid var(--tablero);
+    font-weight: 500;
+}
+.error::before, .ok::before {
+    content: '';
+    flex: none;
+    width: 14px;
+    height: 20px;
+    border: 2px solid var(--tablero);
+    transform: rotate(-10deg);
+}
+.error::before { background: var(--roja); }
+.ok::before { background: var(--cesped-claro); }
+#mensaje:empty { display: none; }
+
+/* Pantalla de ingreso: la cancha entera */
+body.cancha {
+    min-height: 100vh;
+    background: repeating-linear-gradient(90deg, var(--cesped) 0 90px, var(--cesped-claro) 90px 180px);
+    overflow: hidden;
+}
+body.cancha::before, body.cancha::after {
+    content: '';
+    position: fixed;
+    pointer-events: none;
+    border: 5px solid rgba(255, 255, 255, .7);
+}
+body.cancha::before { top: 0; bottom: 0; left: 50%; width: 0; border-width: 0 0 0 5px; margin-left: -2px; }
+body.cancha::after { top: 50%; left: 50%; width: 360px; height: 360px; border-radius: 50%; transform: translate(-50%, -50%); }
+
+.ingreso {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - 140px);
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+}
+.ingreso h1 {
+    margin: 0;
+    text-align: center;
+    font-size: clamp(1.3rem, 4.6vw, 3.2rem);
+    line-height: 1.3;
+    color: var(--amarilla);
+    text-shadow: 5px 5px 0 var(--tablero);
+}
+.ingreso .bajada { margin: 0 0 18px; font: 600 1.4rem var(--titulos); color: var(--cal); text-shadow: 2px 2px 0 var(--tablero); }
+.ingreso .formulario { width: min(380px, calc(100vw - 32px)); }
+
+/* Jugadores corriendo por la parte de abajo de la cancha */
+.escena { position: fixed; left: 0; right: 0; bottom: 24px; height: 80px; pointer-events: none; }
+.corredor { position: absolute; bottom: 0; left: 0; display: flex; align-items: flex-end; gap: 4px; animation: cruzar 11s linear infinite; }
+.corredor .pixel { width: 60px; height: 80px; }
+.corredor .pelota { width: 22px; height: 22px; animation: rebote .36s steps(2) infinite; }
+.corredor.azul { animation-delay: -1.3s; }
+
+.cuadro1 { animation: pasoA .36s linear infinite; }
+.cuadro2 { animation: pasoB .36s linear infinite; }
+
+/* Jugador quieto: siempre con las piernas juntas */
+.quieto .cuadro1 { animation: none; opacity: 0; }
+.quieto .cuadro2 { animation: none; opacity: 1; }
+.espejo svg { transform: scaleX(-1); }
+
+/* El resto de los equipos: arqueros, un pase y un festejo */
+.extras { position: fixed; inset: 0; pointer-events: none; }
+.extras .pixel { width: 48px; height: 64px; }
+.extras .pelota { width: 16px; height: 16px; }
+
+.arquero { position: absolute; top: 50%; margin-top: -32px; animation: atajar 2.6s ease-in-out infinite alternate; }
+.arquero.izquierda { left: 2.5vw; }
+.arquero.derecha { right: 2.5vw; animation-delay: -1.3s; }
+
+.pase { position: absolute; top: 30%; left: 6vw; width: 230px; height: 64px; display: flex; justify-content: space-between; }
+.pase .pelota { position: absolute; left: 50px; bottom: 2px; animation: pasar 1.4s ease-in-out infinite alternate; }
+
+.festejo { position: absolute; top: 30%; right: 8vw; display: flex; gap: 40px; }
+.festejo .pixel { animation: saltar .5s ease-out infinite alternate; }
+.festejo .pixel:nth-child(2) { animation-delay: .25s; }
+
+@keyframes atajar { from { transform: translateY(-90px); } to { transform: translateY(90px); } }
+@keyframes pasar { from { transform: translateX(0); } to { transform: translateX(114px); } }
+@keyframes saltar { from { transform: translateY(0); } to { transform: translateY(-26px); } }
+@keyframes cruzar { from { transform: translateX(-140px); } to { transform: translateX(calc(100vw + 40px)); } }
+@keyframes pasoA { 0%, 50% { opacity: 1; } 50.1%, 100% { opacity: 0; } }
+@keyframes pasoB { 0%, 50% { opacity: 0; } 50.1%, 100% { opacity: 1; } }
+@keyframes rebote { 0% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .corredor, .corredor .pelota, .cuadro1, .cuadro2,
+    .arquero, .pase .pelota, .festejo .pixel { animation: none; }
+    .cuadro2 { opacity: 0; }
+    .corredor.rojo { left: 15%; }
+    .corredor.azul { left: 8%; }
+}
+
+@media (max-width: 1500px) {
+    .barra .usuario span { display: none; }
+}
+
+@media (max-width: 900px) {
+    .extras { display: none; }
+}
+
+@media (max-width: 600px) {
+    .barra { padding: 12px 16px; font-size: 1.2rem; }
+    .barra .marca { font-size: .75rem; }
+    .barra .usuario { margin-left: 0; }
+    main { padding: 20px 16px; }
+    h1 { font-size: 1.15rem; }
+    body.cancha::after { width: 240px; height: 240px; }
+}
