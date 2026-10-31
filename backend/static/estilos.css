@@ -107,7 +107,7 @@ th {
     padding: 9px 10px;
     border-bottom: 4px solid var(--amarilla);
 }
-td { padding: 8px 10px; border-bottom: 1px solid var(--linea); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--linea); font: 500 1.15rem var(--titulos); font-variant-numeric: tabular-nums; }
 tr:nth-child(odd) td { background: #f6faf4; }
 tr:hover td { background: #fff7cc; }
 
@@ -124,11 +124,13 @@ tr:hover td { background: #fff7cc; }
 .formulario label { display: grid; gap: 4px; font-weight: 600; }
 
 input, select {
-    font: inherit;
-    padding: 8px 10px;
+    font: 600 1.15rem var(--titulos);
+    color: var(--tablero);
+    padding: 7px 10px;
     border: 2px solid var(--tablero);
     background: white;
 }
+input::placeholder { font-weight: 500; color: #7a8899; }
 input:focus, select:focus { background: #fffbe6; }
 
 button {
@@ -269,3 +271,79 @@ body.cancha::after { top: 50%; left: 50%; width: 360px; height: 360px; border-ra
     h1 { font-size: 1.15rem; }
     body.cancha::after { width: 240px; height: 240px; }
 }
+
+/* Pantallas de gestión */
+.encabezado { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.encabezado h1 { margin: 0; }
+.formulario.ancho { max-width: none; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 16px 0 24px; }
+.formulario.ancho h2, .formulario.ancho .botones { grid-column: 1 / -1; }
+.formulario.ancho h2 { margin: 0; }
+.formulario[hidden] { display: none; }
+.formulario .botones button { margin-right: 10px; }
+.buscador { width: 100%; max-width: 420px; margin-top: 16px; }
+td.acciones { white-space: nowrap; width: 1%; }
+.vacio { padding: 24px; background: white; border: 2px dashed var(--linea); text-align: center; }
+
+/* Listas desplegables con el estilo del sitio (Chrome y Edge recientes) */
+select, ::picker(select) { appearance: base-select; }
+select { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; border-radius: 0; }
+select::picker-icon { content: '▼'; font-size: .8rem; color: var(--tablero); transition: transform .15s; }
+select:open::picker-icon { transform: rotate(180deg); }
+::picker(select) {
+    margin-top: 4px;
+    padding: 4px 0;
+    border: 3px solid var(--tablero);
+    background: white;
+    box-shadow: 6px 6px 0 var(--tablero);
+}
+option { padding: 7px 14px; font: 600 1.15rem var(--titulos); cursor: pointer; }
+option::checkmark { display: none; }
+option:hover, option:focus-visible { background: #fff7cc; outline: none; }
+option:checked { background: var(--amarilla); }
+
+/* Calendario propio */
+input[type=date]::-webkit-calendar-picker-indicator { display: none; }
+.campo-fecha { position: relative; display: grid; }
+.campo-fecha input { padding-right: 46px; }
+.boton-fecha {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    padding: 4px;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+}
+.boton-fecha:hover { background: #fff7cc; }
+.boton-fecha:active { transform: translateY(-50%); }
+.boton-fecha .pixel { width: 24px; height: 24px; }
+
+.calendario {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: 310px;
+    padding: 12px;
+    background: white;
+    border: 3px solid var(--tablero);
+    box-shadow: 6px 6px 0 var(--tablero);
+}
+.cal-cabeza { display: grid; grid-template-columns: auto 1fr auto auto; gap: 6px; margin-bottom: 10px; }
+.cal-cabeza select { padding: 4px 8px; font-size: 1.05rem; }
+.cal-cabeza button { margin: 0; padding: 2px 9px; box-shadow: 2px 2px 0 var(--tablero); font-size: .9rem; }
+.cal-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.cal-semana { font: 700 1rem var(--titulos); color: #5b6b80; padding-bottom: 4px; }
+.cal-dias button {
+    margin: 0;
+    padding: 5px 0;
+    border: 2px solid transparent;
+    box-shadow: none;
+    font: 600 1.05rem var(--titulos);
+}
+.cal-dias button:hover { border-color: var(--tablero); background: white; }
+.cal-dias button.hoy { border-color: var(--cesped); }
+.cal-dias button.elegido { background: var(--amarilla); border-color: var(--tablero); box-shadow: 2px 2px 0 var(--tablero); }
+.cal-dias button:disabled { color: #b6c0cc; cursor: default; border-color: transparent; background: none; }

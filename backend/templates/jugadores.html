@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Jugadores - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Jugadores</h1>
+    <button type="button" class="principal" onclick="abrirAlta()">Agregar jugador</button>
+</div>
+
+<form id="formulario" class="formulario ancho" hidden>
+    <h2 id="titulo-formulario">Nuevo jugador</h2>
+
+    <label>Cédula
+        <input name="ci" type="number" min="1" max="99999999" required>
+    </label>
+    <label>Fecha de nacimiento
+        <input name="fecha_nacimiento" type="date" required>
+    </label>
+    <label>Nombre
+        <input name="nombre" maxlength="50" required>
+    </label>
+    <label>Apellido
+        <input name="apellido" maxlength="50" required>
+    </label>
+    <label>Correo (opcional)
+        <input name="email" type="email" maxlength="100">
+    </label>
+    <label>Facultad
+        <select name="id_facultad" required>
+            <option value="">Elegí una facultad</option>
+            {% for f in facultades %}
+                <option value="{{ f.id_facultad }}">{{ f.nombre }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Tipo
+        <select name="tipo" required>
+            <option value="">Elegí un tipo</option>
+            <option value="grado">Grado</option>
+            <option value="posgrado">Posgrado</option>
+            <option value="docente">Docente</option>
+            <option value="funcionario">Funcionario</option>
+        </select>
+    </label>
+
+    <div class="botones">
+        <button type="submit" class="principal">Guardar jugador</button>
+        <button type="button" onclick="cerrarFormulario()">Cancelar</button>
+    </div>
+</form>
+
+<input id="buscador" class="buscador" type="search" placeholder="Buscar por nombre, apellido o cédula" oninput="dibujar()">
+
+<div id="tabla"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const FACULTADES = Object.fromEntries({{ facultades | tojson }}.map(f => [f.id_facultad, f.nombre]));
+const form = document.getElementById('formulario');
+let jugadores = [];
+let editando = null;
+
+// Trae los jugadores del backend y los dibuja.
+async function cargar() {
+    jugadores = (await api('GET', '/jugadores')).jugadores;
+    dibujar();
+}
+
+// Dibuja la tabla aplicando el texto del buscador.
+function dibujar() {
+    const texto = document.getElementById('buscador').value.toLowerCase();
+    const filas = jugadores.filter(j =>
+        `${j.ci} ${j.nombre} ${j.apellido}`.toLowerCase().includes(texto)
+    );
+
+    tabla('tabla', filas, {
+        columnas: [
+            ['Cédula', j => j.ci],
+            ['Nombre', j => j.nombre + ' ' + j.apellido],
+            ['Facultad', j => FACULTADES[j.id_facultad]],
+            ['Tipo', j => j.tipo[0].toUpperCase() + j.tipo.slice(1)],
+            ['Nacimiento', j => fechaLinda(j.fecha_nacimiento)],
+            ['Correo', j => j.email],
+        ],
+        acciones: [
+            ['Editar', abrirEdicion],
+            ['Borrar', borrar, 'peligro'],
+        ],
+    });
+}
+
+function abrirAlta() {
+    editando = null;
+    form.reset();
+    form.ci.disabled = false;
+    document.getElementById('titulo-formulario').textContent = 'Nuevo jugador';
+    form.hidden = false;
+    form.ci.focus();
+}
+
+function abrirEdicion(j) {
+    editando = j.ci;
+    form.ci.value = j.ci;
+    form.ci.disabled = true;
+    form.nombre.value = j.nombre;
+    form.apellido.value = j.apellido;
+    form.email.value = j.email || '';
+    form.fecha_nacimiento.value = fechaISO(j.fecha_nacimiento);
+    form.id_facultad.value = j.id_facultad;
+    form.tipo.value = j.tipo;
+    document.getElementById('titulo-formulario').textContent = 'Editar a ' + j.nombre + ' ' + j.apellido;
+    form.hidden = false;
+    form.scrollIntoView({behavior: 'smooth'});
+}
+
+function cerrarFormulario() {
+    form.hidden = true;
+}
+
+// Guarda el alta o la modificación según el modo del formulario.
+form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const datos = {
+        nombre: form.nombre.value.trim(),
+        apellido: form.apellido.value.trim(),
+        email: form.email.value.trim() || null,
+        fecha_nacimiento: form.fecha_nacimiento.value,
+        id_facultad: Number(form.id_facultad.value),
+        tipo: form.tipo.value,
+    };
+
+    if (editando) {
+        await api('PUT', '/jugadores/' + editando, datos);
+    } else {
+        await api('POST', '/jugadores/nuevo', {ci: Number(form.ci.value), ...datos});
+    }
+
+    cerrarFormulario();
+    cargar();
+};
+
+async function borrar(j) {
+    if (!confirm('¿Borrar a ' + j.nombre + ' ' + j.apellido + '?')) return;
+    await api('DELETE', '/jugadores/' + j.ci);
+    cargar();
+}
+
+form.fecha_nacimiento.max = new Date().toISOString().slice(0, 10);
+cargar();
+</script>
+{% endblock %}

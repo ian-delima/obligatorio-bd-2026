@@ -80,6 +80,16 @@ const ICONOS = {
         'w..r..y.',
         'kkkkkkkk',
     ],
+    calendario: [
+        '.k....k.',
+        'kkkkkkkk',
+        'krrrrrrk',
+        'kwwwwwwk',
+        'kwkwkwwk',
+        'kwwwwwwk',
+        'kwkwkwwk',
+        'kkkkkkkk',
+    ],
     pelota: [
         '.wwww.',
         'wwkwww',

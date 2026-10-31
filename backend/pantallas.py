@@ -1,0 +1,12 @@
+from flask import Blueprint, render_template
+from torneos_equipos import admin, leer
+
+pantallas_bp = Blueprint('pantallas', __name__, url_prefix='/panel')
+
+
+# Pantalla de ABM de jugadores.
+@pantallas_bp.get('/jugadores')
+@admin
+def jugadores():
+    facultades = leer('SELECT id_facultad, nombre FROM facultad ORDER BY nombre')
+    return render_template('jugadores.html', facultades=facultades)

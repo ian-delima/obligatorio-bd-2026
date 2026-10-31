@@ -12,6 +12,7 @@ from instalaciones import instalaciones_bp
 from planillas import planillas_bp
 from reportes import reportes_bp
 from partidos import partidos_bp
+from pantallas import pantallas_bp
 
 from db import conectar
 from jugadores import (
@@ -30,6 +31,7 @@ app.register_blueprint(instalaciones_bp)
 app.register_blueprint(partidos_bp)
 app.register_blueprint(planillas_bp)
 app.register_blueprint(reportes_bp)
+app.register_blueprint(pantallas_bp)
 app.secret_key = os.getenv("SECRET_KEY")
 
 
