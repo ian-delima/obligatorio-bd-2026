@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Planillas - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<h1>Planillas</h1>
+
+<label class="elegir-partido">Partido
+    <select id="partido"></select>
+</label>
+
+<div id="contenido" hidden>
+    <div class="marcador">
+        <div class="marcador-equipo">
+            <span class="pixel quieto" data-pixel="rojo"></span>
+            <span id="nombre-local"></span>
+        </div>
+        <div class="marcador-goles">
+            <span id="goles-local">0</span>
+            <span>-</span>
+            <span id="goles-visitante">0</span>
+        </div>
+        <div class="marcador-equipo visitante">
+            <span id="nombre-visitante"></span>
+            <span class="pixel quieto espejo" data-pixel="azul"></span>
+        </div>
+        <p id="info-partido" class="marcador-info"></p>
+    </div>
+
+    <div class="dos-equipos">
+        <section>
+            <h2 id="titulo-local"></h2>
+            <div id="plantel-local"></div>
+        </section>
+        <section>
+            <h2 id="titulo-visitante"></h2>
+            <div id="plantel-visitante"></div>
+        </section>
+    </div>
+
+    <h2>Goles y tarjetas</h2>
+    <div id="eventos"></div>
+</div>
+
+<dialog id="dialogo">
+    <form id="form-evento" class="formulario">
+        <h2 id="titulo-dialogo"></h2>
+        <label>Minuto
+            <input name="minuto" type="number" min="0" max="60" required>
+        </label>
+        <label class="casilla" id="casilla-autogol">
+            <input name="autogol" type="checkbox">
+            Fue en contra (autogol)
+        </label>
+        <div class="botones">
+            <button type="submit" class="principal">Guardar</button>
+            <button type="button" onclick="dialogo.close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const selector = document.getElementById('partido');
+const dialogo = document.getElementById('dialogo');
+const formEvento = document.getElementById('form-evento');
+let detalle = null;
+let evento = null;
+
+// Llena la lista de partidos agrupados por fecha y elige uno.
+async function cargarPartidos() {
+    const {partidos} = await api('GET', '/planillas/partidos');
+    const fechas = [...new Set(partidos.map(p => p.numero_fecha))];
+
+    const diaCorto = dia => dia.split('-').reverse().slice(0, 2).join('/');
+
+    // Si todos los partidos de la fecha son el mismo día, el día va en el título del grupo.
+    // Si no (por ejemplo, uno reprogramado), va al lado de cada partido.
+    selector.innerHTML = fechas.map(f => {
+        const deLaFecha = partidos.filter(p => p.numero_fecha === f);
+        const mismoDia = deLaFecha.every(p => p.dia === deLaFecha[0].dia);
+        const grupo = mismoDia ? `Fecha ${f}, ${diaCorto(deLaFecha[0].dia)}` : `Fecha ${f}`;
+
+        return `<optgroup label="${grupo}">` + deLaFecha.map(p =>
+            `<option value="${p.id_partido}">${p.local} vs ${p.visitante}${mismoDia ? '' : ', ' + diaCorto(p.dia)}</option>`
+        ).join('') + '</optgroup>';
+    }).join('');
+
+    const hoy = new Date().toISOString().slice(0, 10);
+    const pasados = partidos.filter(p => p.dia <= hoy);
+    const elegido = location.hash.slice(1) || (pasados.at(-1) || partidos[0])?.id_partido;
+    if (elegido) {
+        selector.value = elegido;
+        cargarDetalle();
+    }
+}
+
+async function cargarDetalle() {
+    history.replaceState(null, '', '#' + selector.value);
+    detalle = await api('GET', '/partidos/' + selector.value + '/detalle');
+    dibujar();
+}
+
+function nombreDe(ci) {
+    const j = detalle.plantel.find(x => x.ci === ci);
+    return j ? j.nombre + ' ' + j.apellido : ci;
+}
+
+function boton(texto, funcion, clase = '') {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = texto;
+    b.className = clase;
+    b.onclick = funcion;
+    return b;
+}
+
+function etiqueta(texto, clase) {
+    const s = document.createElement('span');
+    s.className = 'etiqueta ' + clase;
+    s.textContent = texto;
+    return s;
+}
+
+// Qué se puede hacer con cada jugador según su situación en el partido.
+function accionesJugador(j) {
+    if (j.suspendido) return etiqueta('Suspendido', 'roja suspendido');
+
+    const caja = document.createElement('span');
+    if (!j.en_planilla) {
+        caja.append(boton('Agregar a la planilla', () => agregar(j)));
+    } else {
+        caja.append(
+            boton('Gol', () => abrirEvento('gol', j), 'evento gol'),
+            boton('Amarilla', () => abrirEvento('amarilla', j), 'evento amarilla'),
+            boton('Roja', () => abrirEvento('roja', j), 'evento roja'),
+        );
+    }
+    return caja;
+}
+
+function dibujar() {
+    const p = detalle.partido;
+    document.getElementById('contenido').hidden = false;
+
+    // El resultado sale de los goles: un autogol suma para el rival.
+    let local = 0, visitante = 0;
+    for (const g of detalle.goles) {
+        const paraLocal = (g.id_equipo === p.id_equipo_local) !== Boolean(g.autogol);
+        paraLocal ? local++ : visitante++;
+    }
+
+    document.getElementById('goles-local').textContent = local;
+    document.getElementById('goles-visitante').textContent = visitante;
+    for (const lado of ['local', 'visitante']) {
+        document.getElementById('nombre-' + lado).textContent = p[lado];
+        document.getElementById('titulo-' + lado).textContent = p[lado];
+    }
+    const estado = p.estado === 'jugado' ? 'Jugado' : 'Programado';
+    document.getElementById('info-partido').textContent =
+        `Fecha ${p.numero_fecha}, ${p.dia.split('-').reverse().join('/')}. ${estado}.`;
+
+    for (const [lado, id] of [['local', p.id_equipo_local], ['visitante', p.id_equipo_visitante]]) {
+        tabla('plantel-' + lado, detalle.plantel.filter(j => j.id_equipo === id), {
+            columnas: [
+                ['#', j => j.numero_camiseta],
+                ['Jugador', j => j.nombre + ' ' + j.apellido],
+                ['', accionesJugador],
+            ],
+        });
+    }
+
+    const eventos = [
+        ...detalle.goles.map(g => ({...g, tipo: g.autogol ? 'Gol en contra' : 'Gol'})),
+        ...detalle.tarjetas.map(t => ({...t, tipo: 'Tarjeta ' + t.color})),
+    ].sort((a, b) => a.minuto - b.minuto);
+
+    tabla('eventos', eventos, {
+        columnas: [
+            ["Min.", e => e.minuto + "'"],
+            ['Equipo', e => e.id_equipo === p.id_equipo_local ? p.local : p.visitante],
+            ['Jugador', e => nombreDe(e.ci_jugador)],
+            ['Qué pasó', e => etiqueta(e.tipo, e.color || 'gol')],
+            ['', e => e.id_gol ? boton('Borrar gol', () => borrarGol(e), 'peligro') : ''],
+        ],
+    });
+}
+
+async function agregar(j) {
+    await api('POST', `/partidos/${selector.value}/planilla`, {ci_jugador: j.ci});
+    cargarDetalle();
+}
+
+function abrirEvento(tipo, j) {
+    evento = {tipo, ci: j.ci};
+    formEvento.reset();
+    const textos = {gol: 'Gol de ', amarilla: 'Amarilla para ', roja: 'Roja para '};
+    titulo('titulo-dialogo', textos[tipo], [j.nombre + ' ' + j.apellido]);
+    document.getElementById('casilla-autogol').hidden = tipo !== 'gol';
+    dialogo.showModal();
+}
+
+formEvento.onsubmit = async (e) => {
+    e.preventDefault();
+    const minuto = Number(formEvento.minuto.value);
+    dialogo.close();
+
+    if (evento.tipo === 'gol') {
+        await api('POST', `/partidos/${selector.value}/goles`,
+            {ci_jugador: evento.ci, minuto, autogol: formEvento.autogol.checked});
+    } else {
+        const r = await api('POST', `/partidos/${selector.value}/tarjetas`,
+            {ci_jugador: evento.ci, minuto, color: evento.tipo});
+        if (r.sancion) {
+            mostrar(`Tarjeta registrada. Se creó una sanción automática (${r.sancion}) para la fecha siguiente.`, false);
+        }
+    }
+    cargarDetalle();
+};
+
+async function borrarGol(g) {
+    if (!confirm(`¿Borrar el gol de ${nombreDe(g.ci_jugador)} (minuto ${g.minuto})?`)) return;
+    await api('DELETE', '/goles/' + g.id_gol);
+    cargarDetalle();
+}
+
+selector.onchange = cargarDetalle;
+cargarPartidos();
+</script>
+{% endblock %}

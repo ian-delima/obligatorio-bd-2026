@@ -312,3 +312,110 @@ def eliminar_gol(id_gol):
         return {'mensaje': 'Gol eliminado'}, 200
 
     return ejecutar_segun_rol(op)
+
+# Lista los partidos a los que se les puede cargar planilla (ni postergados ni cancelados).
+@planillas_bp.get('/planillas/partidos')
+@planillero_o_admin
+def partidos_para_planilla():
+    def op(cur):
+        cur.execute(
+            """
+            SELECT p.id_partido, p.numero_fecha, p.dia, p.estado,
+                   el.nombre AS local, ev.nombre AS visitante
+            FROM partido p
+            JOIN equipo el ON el.id_equipo = p.id_equipo_local
+            JOIN equipo ev ON ev.id_equipo = p.id_equipo_visitante
+            WHERE p.estado IN ('programado', 'jugado')
+            ORDER BY p.numero_fecha, p.dia, p.id_turno
+            """
+        )
+        partidos = cur.fetchall()
+        for p in partidos:
+            p['dia'] = p['dia'].isoformat()
+        return {'partidos': partidos}, 200
+
+    return ejecutar_segun_rol(op)
+
+
+# Devuelve todo lo que necesita la pantalla de planilla: partido, planteles, goles y tarjetas.
+@planillas_bp.get('/partidos/<int:id_partido>/detalle')
+@planillero_o_admin
+def detalle_planilla(id_partido):
+    def op(cur):
+        cur.execute(
+            """
+            SELECT p.id_partido, p.id_torneo, p.numero_fecha, p.dia, p.estado,
+                   p.id_equipo_local, p.id_equipo_visitante,
+                   el.nombre AS local, ev.nombre AS visitante
+            FROM partido p
+            JOIN equipo el ON el.id_equipo = p.id_equipo_local
+            JOIN equipo ev ON ev.id_equipo = p.id_equipo_visitante
+            WHERE p.id_partido=%s
+            """,
+            (id_partido,)
+        )
+        partido = cur.fetchone()
+
+        if not partido:
+            return {'error': 'No existe el partido'}, 404
+
+        partido['dia'] = partido['dia'].isoformat()
+
+        cur.execute(
+            """
+            SELECT ejt.ci_jugador AS ci, ejt.id_equipo, ejt.numero_camiseta,
+                   j.nombre, j.apellido,
+                   pp.ci_jugador IS NOT NULL AS en_planilla,
+                   EXISTS (
+                       SELECT 1 FROM sancion_jugador s
+                       WHERE s.ci_jugador = ejt.ci_jugador
+                         AND s.id_torneo = ejt.id_torneo
+                         AND %s BETWEEN s.numero_fecha_inicio
+                                    AND s.numero_fecha_inicio + s.cantidad_fechas - 1
+                   ) AS suspendido
+            FROM equipo_jugador_torneo ejt
+            JOIN jugador j ON j.ci = ejt.ci_jugador
+            LEFT JOIN planilla_partido pp
+                   ON pp.id_partido = %s AND pp.ci_jugador = ejt.ci_jugador
+            WHERE ejt.id_torneo = %s AND ejt.id_equipo IN (%s, %s)
+            ORDER BY ejt.numero_camiseta, j.apellido
+            """,
+            (
+                partido['numero_fecha'],
+                id_partido,
+                partido['id_torneo'],
+                partido['id_equipo_local'],
+                partido['id_equipo_visitante']
+            )
+        )
+        plantel = cur.fetchall()
+
+        cur.execute(
+            """
+            SELECT g.id_gol, g.ci_jugador, g.minuto, g.autogol, pp.id_equipo
+            FROM gol g
+            JOIN planilla_partido pp
+              ON pp.id_partido = g.id_partido AND pp.ci_jugador = g.ci_jugador
+            WHERE g.id_partido=%s
+            ORDER BY g.minuto
+            """,
+            (id_partido,)
+        )
+        goles = cur.fetchall()
+
+        cur.execute(
+            """
+            SELECT t.id_tarjeta, t.ci_jugador, t.minuto, t.color, pp.id_equipo
+            FROM tarjeta t
+            JOIN planilla_partido pp
+              ON pp.id_partido = t.id_partido AND pp.ci_jugador = t.ci_jugador
+            WHERE t.id_partido=%s
+            ORDER BY t.minuto
+            """,
+            (id_partido,)
+        )
+        tarjetas = cur.fetchall()
+
+        return {'partido': partido, 'plantel': plantel, 'goles': goles, 'tarjetas': tarjetas}, 200
+
+    return ejecutar_segun_rol(op)

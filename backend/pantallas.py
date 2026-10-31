@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
 from torneos_equipos import admin, leer
+from planillas import planillero_o_admin
 
 pantallas_bp = Blueprint('pantallas', __name__, url_prefix='/panel')
 
@@ -26,9 +27,15 @@ def sanciones():
     return render_template('sanciones.html')
 
 
-
 # Pantalla de reportes del torneo.
 @pantallas_bp.get('/reportes')
 @admin
 def reportes():
     return render_template('reportes.html')
+
+
+# Pantalla de carga de planillas, goles y tarjetas (también la usa el planillero).
+@pantallas_bp.get('/planillas')
+@planillero_o_admin
+def planillas():
+    return render_template('planillas.html')
