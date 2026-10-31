@@ -369,3 +369,18 @@ input[type=checkbox]:checked::after { content: '✓'; font: 700 1.1rem var(--tit
 
 /* Datos dentro de un título (por ejemplo, el nombre de lo que se está editando) */
 .dato { font: 400 1.15em var(--datos); background: #fff1a8; padding: 0 6px; border-bottom: 2px solid var(--amarilla); }
+
+.ayuda { max-width: 70ch; margin: 4px 0 8px; color: #3b4a5e; }
+
+/* Motivo de sanción con su tarjetita de color */
+.motivo { display: inline-flex; align-items: center; gap: 8px; }
+.motivo::before {
+    content: '';
+    width: 11px;
+    height: 16px;
+    border: 2px solid var(--tablero);
+    transform: rotate(-10deg);
+}
+.motivo.roja::before { background: var(--roja); }
+.motivo.acumulacion::before { background: var(--amarilla); }
+.motivo.disciplinaria::before { background: var(--tablero); }

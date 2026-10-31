@@ -59,7 +59,10 @@ function tabla(id, filas, {columnas = null, acciones = []} = {}) {
         const tr = cuerpo.insertRow();
 
         for (const [, valor] of columnas) {
-            tr.insertCell().textContent = valor(fila) ?? '';
+            const v = valor(fila);
+            const celda = tr.insertCell();
+            if (v instanceof Node) celda.appendChild(v);
+            else celda.textContent = v ?? '';
         }
 
         if (acciones.length) {
