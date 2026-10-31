@@ -9,6 +9,7 @@
     --roja: #ff3b30;
     --azul: #2f6bff;
     --pixel: 'Press Start 2P', monospace;
+    --datos: 'VT323', monospace;
     --titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
     --texto: 'Barlow', system-ui, sans-serif;
 }
@@ -347,3 +348,24 @@ input[type=date]::-webkit-calendar-picker-indicator { display: none; }
 .cal-dias button.hoy { border-color: var(--cesped); }
 .cal-dias button.elegido { background: var(--amarilla); border-color: var(--tablero); box-shadow: 2px 2px 0 var(--tablero); }
 .cal-dias button:disabled { color: #b6c0cc; cursor: default; border-color: transparent; background: none; }
+.encabezado.separado { margin-top: 40px; }
+
+/* Casilla de verificación cuadrada, tipo maquinita */
+.formulario .casilla { display: flex; align-items: center; gap: 10px; align-self: end; padding-bottom: 8px; cursor: pointer; }
+input[type=checkbox] {
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+    border: 2px solid var(--tablero);
+    box-shadow: 2px 2px 0 var(--tablero);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+input[type=checkbox]:checked { background: var(--amarilla); }
+input[type=checkbox]:checked::after { content: '✓'; font: 700 1.1rem var(--titulos); color: var(--tablero); }
+
+/* Datos dentro de un título (por ejemplo, el nombre de lo que se está editando) */
+.dato { font: 400 1.15em var(--datos); background: #fff1a8; padding: 0 6px; border-bottom: 2px solid var(--amarilla); }

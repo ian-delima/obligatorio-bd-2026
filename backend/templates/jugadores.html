@@ -95,7 +95,7 @@ function abrirAlta() {
     editando = null;
     form.reset();
     form.ci.disabled = false;
-    document.getElementById('titulo-formulario').textContent = 'Nuevo jugador';
+    titulo('titulo-formulario', 'Nuevo jugador');
     form.hidden = false;
     form.ci.focus();
 }
@@ -110,7 +110,7 @@ function abrirEdicion(j) {
     form.fecha_nacimiento.value = fechaISO(j.fecha_nacimiento);
     form.id_facultad.value = j.id_facultad;
     form.tipo.value = j.tipo;
-    document.getElementById('titulo-formulario').textContent = 'Editar a ' + j.nombre + ' ' + j.apellido;
+    titulo('titulo-formulario', 'Editar a ', [j.nombre + ' ' + j.apellido]);
     form.hidden = false;
     form.scrollIntoView({behavior: 'smooth'});
 }

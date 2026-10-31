@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Complejos y canchas - Torneo Interfacultades{% endblock %}
+
+{% set departamentos = ['Artigas', 'Canelones', 'Cerro Largo', 'Colonia', 'Durazno', 'Flores',
+    'Florida', 'Lavalleja', 'Maldonado', 'Montevideo', 'Paysandú', 'Río Negro', 'Rivera',
+    'Rocha', 'Salto', 'San José', 'Soriano', 'Tacuarembó', 'Treinta y Tres'] %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Complejos</h1>
+    <button type="button" class="principal" onclick="abrirComplejo()">Agregar complejo</button>
+</div>
+
+<form id="form-complejo" class="formulario ancho" hidden>
+    <h2 id="titulo-complejo">Nuevo complejo</h2>
+    <label>Nombre
+        <input name="nombre" maxlength="100" required>
+    </label>
+    <label>Dirección
+        <input name="direccion" maxlength="150" required>
+    </label>
+    <label>Departamento
+        <select name="departamento" required>
+            <option value="">Elegí un departamento</option>
+            {% for d in departamentos %}<option>{{ d }}</option>{% endfor %}
+        </select>
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar complejo</button>
+        <button type="button" onclick="this.form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<div id="tabla-complejos"></div>
+
+<div class="encabezado separado">
+    <h1>Canchas</h1>
+    <button type="button" class="principal" onclick="abrirCancha()">Agregar cancha</button>
+</div>
+
+<form id="form-cancha" class="formulario ancho" hidden>
+    <h2 id="titulo-cancha">Nueva cancha</h2>
+    <label>Complejo
+        <select name="id_complejo" required></select>
+    </label>
+    <label>Nombre de la cancha
+        <input name="nombre_cancha" maxlength="50" required placeholder="Por ejemplo: Cancha 1">
+    </label>
+    <label>Superficie
+        <select name="superficie" required>
+            <option value="">Elegí una superficie</option>
+            <option value="sintetico">Sintético</option>
+            <option value="parquet">Parquet</option>
+        </select>
+    </label>
+    <label class="casilla">
+        <input name="techada" type="checkbox">
+        Es techada
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar cancha</button>
+        <button type="button" onclick="this.form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<div id="tabla-canchas"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const formComplejo = document.getElementById('form-complejo');
+const formCancha = document.getElementById('form-cancha');
+let complejos = [];
+let complejoEditando = null;
+let canchaEditando = null;
+
+// Trae complejos y canchas y redibuja todo.
+async function cargar() {
+    complejos = (await api('GET', '/complejos')).complejos;
+    const canchas = (await api('GET', '/canchas')).canchas;
+
+    tabla('tabla-complejos', complejos, {
+        columnas: [
+            ['Nombre', c => c.nombre],
+            ['Dirección', c => c.direccion],
+            ['Departamento', c => c.departamento],
+            ['Canchas', c => canchas.filter(x => x.id_complejo === c.id_complejo).length],
+        ],
+        acciones: [
+            ['Editar', editarComplejo],
+            ['Borrar', borrarComplejo, 'peligro'],
+        ],
+    });
+
+    tabla('tabla-canchas', canchas, {
+        columnas: [
+            ['Cancha', c => c.nombre_cancha],
+            ['Complejo', c => c.nombre_complejo],
+            ['Superficie', c => c.superficie === 'sintetico' ? 'Sintético' : 'Parquet'],
+            ['Techada', c => c.techada ? 'Sí' : 'No'],
+        ],
+        acciones: [
+            ['Editar', editarCancha],
+            ['Borrar', borrarCancha, 'peligro'],
+        ],
+    });
+
+    formCancha.id_complejo.innerHTML = '<option value="">Elegí un complejo</option>' +
+        complejos.map(c => `<option value="${c.id_complejo}">${c.nombre}</option>`).join('');
+}
+
+// Si el valor guardado no está en la lista (dato viejo), lo agrega para no perderlo.
+function elegir(select, valor) {
+    if (![...select.options].some(o => o.value === valor)) {
+        select.add(new Option(valor, valor));
+    }
+    select.value = valor;
+}
+
+function abrirComplejo() {
+    complejoEditando = null;
+    formComplejo.reset();
+    titulo('titulo-complejo', 'Nuevo complejo');
+    formComplejo.hidden = false;
+    formComplejo.nombre.focus();
+}
+
+function editarComplejo(c) {
+    complejoEditando = c.id_complejo;
+    formComplejo.nombre.value = c.nombre;
+    formComplejo.direccion.value = c.direccion;
+    elegir(formComplejo.departamento, c.departamento);
+    titulo('titulo-complejo', 'Editar ', [c.nombre]);
+    formComplejo.hidden = false;
+    formComplejo.scrollIntoView({behavior: 'smooth'});
+}
+
+formComplejo.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = {
+        nombre: formComplejo.nombre.value.trim(),
+        direccion: formComplejo.direccion.value.trim(),
+        departamento: formComplejo.departamento.value,
+    };
+
+    if (complejoEditando) {
+        await api('PUT', '/complejos/' + complejoEditando, datos);
+    } else {
+        await api('POST', '/complejos/nuevo', datos);
+    }
+
+    formComplejo.hidden = true;
+    cargar();
+};
+
+async function borrarComplejo(c) {
+    if (!confirm('¿Borrar el complejo ' + c.nombre + '?')) return;
+    await api('DELETE', '/complejos/' + c.id_complejo);
+    cargar();
+}
+
+function abrirCancha() {
+    canchaEditando = null;
+    formCancha.reset();
+    titulo('titulo-cancha', 'Nueva cancha');
+    formCancha.hidden = false;
+    formCancha.id_complejo.focus();
+}
+
+function editarCancha(c) {
+    canchaEditando = c;
+    formCancha.id_complejo.value = c.id_complejo;
+    formCancha.nombre_cancha.value = c.nombre_cancha;
+    formCancha.superficie.value = c.superficie;
+    formCancha.techada.checked = Boolean(c.techada);
+    titulo('titulo-cancha', 'Editar ', [c.nombre_cancha], ' de ', [c.nombre_complejo]);
+    formCancha.hidden = false;
+    formCancha.scrollIntoView({behavior: 'smooth'});
+}
+
+formCancha.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = {
+        id_complejo: Number(formCancha.id_complejo.value),
+        nombre_cancha: formCancha.nombre_cancha.value.trim(),
+        superficie: formCancha.superficie.value,
+        techada: formCancha.techada.checked,
+    };
+
+    if (canchaEditando) {
+        await api('PUT', urlCancha(canchaEditando), datos);
+    } else {
+        await api('POST', '/canchas/nueva', datos);
+    }
+
+    formCancha.hidden = true;
+    cargar();
+};
+
+async function borrarCancha(c) {
+    if (!confirm('¿Borrar ' + c.nombre_cancha + ' de ' + c.nombre_complejo + '?')) return;
+    await api('DELETE', urlCancha(c));
+    cargar();
+}
+
+// La cancha se identifica por complejo + nombre (su clave compuesta).
+function urlCancha(c) {
+    return '/canchas/' + c.id_complejo + '/' + encodeURIComponent(c.nombre_cancha);
+}
+
+cargar();
+</script>
+{% endblock %}

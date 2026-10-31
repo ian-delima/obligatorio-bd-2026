@@ -10,3 +10,9 @@ pantallas_bp = Blueprint('pantallas', __name__, url_prefix='/panel')
 def jugadores():
     facultades = leer('SELECT id_facultad, nombre FROM facultad ORDER BY nombre')
     return render_template('jugadores.html', facultades=facultades)
+
+# Pantalla de ABM de complejos y sus canchas.
+@pantallas_bp.get('/instalaciones')
+@admin
+def instalaciones():
+    return render_template('instalaciones.html')

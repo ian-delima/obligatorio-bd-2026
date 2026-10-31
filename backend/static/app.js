@@ -192,3 +192,16 @@ document.querySelectorAll('input[type=date]').forEach(armarCalendario);
 
 // Los errores de api() ya se muestran en pantalla, así que no los repetimos en la consola.
 window.addEventListener('unhandledrejection', e => e.preventDefault());
+
+// Escribe un título mezclando texto y datos: titulo('id', 'Editar ', [nombre]).
+// Los datos (entre corchetes) se muestran con la letra de datos.
+function titulo(id, ...partes) {
+    const el = document.getElementById(id);
+    el.replaceChildren(...partes.map(p => {
+        if (!Array.isArray(p)) return p;
+        const span = document.createElement('span');
+        span.className = 'dato';
+        span.textContent = p[0];
+        return span;
+    }));
+}
