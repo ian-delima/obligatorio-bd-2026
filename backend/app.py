@@ -2,6 +2,7 @@ import os
 from datetime import date
 from functools import wraps
 
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash
 from mysql.connector import IntegrityError
@@ -10,6 +11,7 @@ from sanciones import sanciones_bp
 from instalaciones import instalaciones_bp
 from planillas import planillas_bp
 from reportes import reportes_bp
+from partidos import partidos_bp
 
 from db import conectar
 from jugadores import (
@@ -25,6 +27,7 @@ app = Flask(__name__)
 app.register_blueprint(te_bp)
 app.register_blueprint(sanciones_bp)
 app.register_blueprint(instalaciones_bp)
+app.register_blueprint(partidos_bp)
 app.register_blueprint(planillas_bp)
 app.register_blueprint(reportes_bp)
 app.secret_key = os.getenv("SECRET_KEY")
