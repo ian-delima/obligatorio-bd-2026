@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Sanciones - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Sanciones</h1>
+    <button type="button" class="principal" onclick="abrirAlta()">Agregar sanción</button>
+</div>
+
+<p class="ayuda">Las sanciones por tarjeta roja y por acumulación de amarillas se crean solas al cargar la planilla. Acá podés agregar las disciplinarias o corregir cualquiera.</p>
+
+<form id="formulario" class="formulario ancho" hidden>
+    <h2 id="titulo-formulario">Nueva sanción</h2>
+    <label>Jugador
+        <select name="ci_jugador" required></select>
+    </label>
+    <label>Torneo
+        <select name="id_torneo" required></select>
+    </label>
+    <label>Motivo
+        <select name="motivo" required>
+            <option value="">Elegí un motivo</option>
+            <option value="disciplinaria">Disciplinaria</option>
+            <option value="roja">Tarjeta roja</option>
+            <option value="acumulacion de amarillas">Acumulación de amarillas</option>
+        </select>
+    </label>
+    <label>Empieza en la fecha
+        <input name="numero_fecha_inicio" type="number" min="1" max="99" required>
+    </label>
+    <label>Cantidad de fechas
+        <input name="cantidad_fechas" type="number" min="1" max="127" value="1" required>
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar sanción</button>
+        <button type="button" onclick="form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<input id="buscador" class="buscador" type="search" placeholder="Buscar por jugador o cédula" oninput="dibujar()">
+
+<div id="tabla"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('formulario');
+const MOTIVOS = {
+    'roja': 'Tarjeta roja',
+    'acumulacion de amarillas': 'Acumulación de amarillas',
+    'disciplinaria': 'Disciplinaria',
+};
+let sanciones = [];
+let jugadores = {};
+let torneos = {};
+let editando = null;
+
+async function cargar() {
+    const [s, j, t] = await Promise.all([
+        api('GET', '/sanciones'),
+        api('GET', '/jugadores'),
+        api('GET', '/torneos'),
+    ]);
+    sanciones = s.sanciones;
+    jugadores = Object.fromEntries(j.jugadores.map(x => [x.ci, x]));
+    torneos = Object.fromEntries(t.torneos.map(x => [x.id_torneo, x]));
+
+    form.ci_jugador.innerHTML = '<option value="">Elegí un jugador</option>' +
+        j.jugadores
+            .sort((a, b) => a.apellido.localeCompare(b.apellido))
+            .map(x => `<option value="${x.ci}">${x.apellido}, ${x.nombre} (${x.ci})</option>`).join('');
+    form.id_torneo.innerHTML = '<option value="">Elegí un torneo</option>' +
+        t.torneos.map(x => `<option value="${x.id_torneo}">${x.nombre}</option>`).join('');
+
+    dibujar();
+}
+
+function nombre(ci) {
+    const j = jugadores[ci];
+    return j ? j.nombre + ' ' + j.apellido : ci;
+}
+
+// Arma la etiqueta del motivo con una tarjetita del color que corresponde.
+function etiquetaMotivo(motivo) {
+    const span = document.createElement('span');
+    span.className = 'motivo ' + motivo.split(' ')[0];
+    span.textContent = MOTIVOS[motivo];
+    return span;
+}
+
+function dibujar() {
+    const texto = document.getElementById('buscador').value.toLowerCase();
+    const filas = sanciones.filter(s => `${s.ci_jugador} ${nombre(s.ci_jugador)}`.toLowerCase().includes(texto));
+
+    tabla('tabla', filas, {
+        columnas: [
+            ['Jugador', s => nombre(s.ci_jugador)],
+            ['Cédula', s => s.ci_jugador],
+            ['Torneo', s => torneos[s.id_torneo]?.nombre],
+            ['Motivo', s => etiquetaMotivo(s.motivo)],
+            ['Fechas que no juega', s => s.cantidad_fechas === 1
+                ? 'Fecha ' + s.numero_fecha_inicio
+                : `Fechas ${s.numero_fecha_inicio} a ${s.numero_fecha_inicio + s.cantidad_fechas - 1}`],
+        ],
+        acciones: [
+            ['Editar', abrirEdicion],
+            ['Borrar', borrar, 'peligro'],
+        ],
+    });
+}
+
+function abrirAlta() {
+    editando = null;
+    form.reset();
+    titulo('titulo-formulario', 'Nueva sanción');
+    form.hidden = false;
+    form.ci_jugador.focus();
+}
+
+function abrirEdicion(s) {
+    editando = s.id_sancion;
+    form.ci_jugador.value = s.ci_jugador;
+    form.id_torneo.value = s.id_torneo;
+    form.motivo.value = s.motivo;
+    form.numero_fecha_inicio.value = s.numero_fecha_inicio;
+    form.cantidad_fechas.value = s.cantidad_fechas;
+    titulo('titulo-formulario', 'Editar sanción de ', [nombre(s.ci_jugador)]);
+    form.hidden = false;
+    form.scrollIntoView({behavior: 'smooth'});
+}
+
+form.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = {
+        ci_jugador: Number(form.ci_jugador.value),
+        id_torneo: Number(form.id_torneo.value),
+        motivo: form.motivo.value,
+        numero_fecha_inicio: Number(form.numero_fecha_inicio.value),
+        cantidad_fechas: Number(form.cantidad_fechas.value),
+    };
+
+    if (editando) {
+        await api('PUT', '/sanciones/' + editando, datos);
+    } else {
+        await api('POST', '/sanciones', datos);
+    }
+
+    form.hidden = true;
+    cargar();
+};
+
+async function borrar(s) {
+    if (!confirm('¿Borrar la sanción de ' + nombre(s.ci_jugador) + '?')) return;
+    await api('DELETE', '/sanciones/' + s.id_sancion);
+    cargar();
+}
+
+cargar();
+</script>
+{% endblock %}

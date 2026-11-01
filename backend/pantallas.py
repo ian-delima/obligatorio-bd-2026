@@ -1,0 +1,67 @@
+from flask import Blueprint, render_template
+from torneos_equipos import admin, leer
+from planillas import planillero_o_admin
+
+pantallas_bp = Blueprint('pantallas', __name__, url_prefix='/panel')
+
+
+# Pantalla de ABM de jugadores.
+@pantallas_bp.get('/jugadores')
+@admin
+def jugadores():
+    facultades = leer('SELECT id_facultad, nombre FROM facultad ORDER BY nombre')
+    return render_template('jugadores.html', facultades=facultades)
+
+
+# Pantalla de ABM de complejos y sus canchas.
+@pantallas_bp.get('/instalaciones')
+@admin
+def instalaciones():
+    return render_template('instalaciones.html')
+
+
+# Pantalla de ABM de sanciones.
+@pantallas_bp.get('/sanciones')
+@admin
+def sanciones():
+    return render_template('sanciones.html')
+
+
+# Pantalla de reportes del torneo.
+@pantallas_bp.get('/reportes')
+@admin
+def reportes():
+    return render_template('reportes.html')
+
+
+# Pantalla de carga de planillas, goles y tarjetas (también la usa el planillero).
+@pantallas_bp.get('/planillas')
+@planillero_o_admin
+def planillas():
+    return render_template('planillas.html')
+
+
+# Pantalla de ABM de partidos (el fixture).
+@pantallas_bp.get('/partidos')
+@admin
+def partidos():
+    turnos = leer(
+        'SELECT id_turno, CAST(hora_inicio AS CHAR) AS desde, CAST(hora_fin AS CHAR) AS hasta '
+        'FROM turno ORDER BY hora_inicio'
+    )
+    return render_template('partidos.html', turnos=turnos)
+
+
+# Pantalla de ABM de torneos y su cambio de etapa.
+@pantallas_bp.get('/torneos')
+@admin
+def torneos():
+    return render_template('torneos.html')
+
+
+# Pantalla de ABM de equipos, sus planteles y capitanes.
+@pantallas_bp.get('/equipos')
+@admin
+def equipos():
+    facultades = leer('SELECT id_facultad, nombre FROM facultad ORDER BY nombre')
+    return render_template('equipos.html', facultades=facultades)

@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from functools import wraps
-from partidos import partidos_bp
+
 
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash
@@ -10,7 +10,9 @@ from torneos_equipos import te_bp
 from sanciones import sanciones_bp
 from instalaciones import instalaciones_bp
 from planillas import planillas_bp
+from reportes import reportes_bp
 from partidos import partidos_bp
+from pantallas import pantallas_bp
 
 from db import conectar
 from jugadores import (
@@ -23,11 +25,14 @@ from jugadores import (
 
 
 app = Flask(__name__)
+app.json.sort_keys = False
 app.register_blueprint(te_bp)
 app.register_blueprint(sanciones_bp)
 app.register_blueprint(instalaciones_bp)
 app.register_blueprint(partidos_bp)
 app.register_blueprint(planillas_bp)
+app.register_blueprint(reportes_bp)
+app.register_blueprint(pantallas_bp)
 app.secret_key = os.getenv("SECRET_KEY")
 
 
@@ -113,10 +118,7 @@ def validar_textos_jugador(datos):
 @app.route("/")
 @requiere_rol("administrador", "planillero")
 def inicio():
-    return (
-        f"Hola {session['correo']}, entraste como {session['rol']}. "
-        "<a href='/logout'>Salir</a>"
-    )
+    return render_template("inicio.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
