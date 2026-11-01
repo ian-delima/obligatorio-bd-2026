@@ -471,3 +471,8 @@ dialog::backdrop { background: rgba(14, 31, 58, .55); }
 #fixture th:nth-child(3) { width: 8%; }
 #fixture th:nth-child(4) { width: 19%; }
 #fixture th:nth-child(5) { width: 12%; }
+.estado.inscripcion { background: var(--amarilla); }
+.estado.en-curso { background: var(--cesped-claro); color: white; }
+.estado.finalizado { background: #d6dde6; color: #5b6b80; }
+#seccion-plantel { margin-top: 36px; }
+#seccion-plantel .formulario { margin-top: 8px; }

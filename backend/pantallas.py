@@ -50,3 +50,18 @@ def partidos():
         'FROM turno ORDER BY hora_inicio'
     )
     return render_template('partidos.html', turnos=turnos)
+
+
+# Pantalla de ABM de torneos y su cambio de etapa.
+@pantallas_bp.get('/torneos')
+@admin
+def torneos():
+    return render_template('torneos.html')
+
+
+# Pantalla de ABM de equipos, sus planteles y capitanes.
+@pantallas_bp.get('/equipos')
+@admin
+def equipos():
+    facultades = leer('SELECT id_facultad, nombre FROM facultad ORDER BY nombre')
+    return render_template('equipos.html', facultades=facultades)

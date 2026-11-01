@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Equipos - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Equipos</h1>
+    <button type="button" class="principal" id="boton-alta" onclick="abrirAlta()">Agregar equipo</button>
+</div>
+
+<label class="elegir-partido">Torneo
+    <select id="torneo" onchange="cambiarTorneo()"></select>
+</label>
+
+<p id="aviso-etapa" class="ayuda" hidden>Este torneo ya no está en inscripción, así que los equipos y planteles quedan fijos.</p>
+
+<form id="form-equipo" class="formulario ancho" hidden>
+    <h2 id="titulo-equipo">Nuevo equipo</h2>
+    <label>Nombre
+        <input name="nombre" maxlength="50" required>
+    </label>
+    <label>Facultad
+        <select name="id_facultad" required>
+            <option value="">Elegí una facultad</option>
+            {% for f in facultades %}
+                <option value="{{ f.id_facultad }}">{{ f.nombre }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar equipo</button>
+        <button type="button" onclick="this.form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<div id="tabla-equipos"></div>
+
+<section id="seccion-plantel" hidden>
+    <h2 id="titulo-plantel"></h2>
+    <p id="resumen-plantel" class="ayuda"></p>
+
+    <form id="form-plantel" class="formulario ancho">
+        <label>Jugador de la facultad
+            <select name="ci_jugador" required></select>
+        </label>
+        <label>Número de camiseta (opcional)
+            <input name="numero_camiseta" type="number" min="0" max="99">
+        </label>
+        <div class="botones">
+            <button type="submit" class="principal">Agregar al plantel</button>
+        </div>
+    </form>
+
+    <div id="tabla-plantel"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const FACULTADES = Object.fromEntries({{ facultades | tojson }}.map(f => [f.id_facultad, f.nombre]));
+const selTorneo = document.getElementById('torneo');
+const formEquipo = document.getElementById('form-equipo');
+const formPlantel = document.getElementById('form-plantel');
+let torneos = [], equipos = [], jugadores = [];
+let editando = null;
+let equipoAbierto = null;
+
+const torneoActual = () => torneos.find(t => t.id_torneo === Number(selTorneo.value));
+const enInscripcion = () => torneoActual()?.estado === 'inscripcion';
+// Nombre completo de un jugador a partir de su cédula.
+function nombreJugador(ci) {
+    const j = jugadores.find(x => x.ci === ci);
+    return j ? j.nombre + ' ' + j.apellido : '';
+}
+
+async function cargar() {
+    const [t, e, j] = await Promise.all([
+        api('GET', '/torneos'),
+        api('GET', '/equipos'),
+        api('GET', '/jugadores'),
+    ]);
+    torneos = t.torneos;
+    equipos = e.equipos;
+    jugadores = j.jugadores;
+
+    const elegido = selTorneo.value;
+    selTorneo.innerHTML = torneos.map(x => `<option value="${x.id_torneo}">${x.nombre}</option>`).join('');
+    selTorneo.value = elegido || (torneos.find(x => x.estado === 'inscripcion') || torneos.at(-1))?.id_torneo || '';
+
+    dibujarEquipos();
+    if (equipoAbierto) abrirPlantel(equipos.find(x => x.id_equipo === equipoAbierto));
+}
+
+function cambiarTorneo() {
+    equipoAbierto = null;
+    document.getElementById('seccion-plantel').hidden = true;
+    formEquipo.hidden = true;
+    dibujarEquipos();
+}
+
+function dibujarEquipos() {
+    const abierto = enInscripcion();
+    document.getElementById('aviso-etapa').hidden = abierto;
+    document.getElementById('boton-alta').hidden = !abierto;
+
+    const acciones = [['Ver plantel', abrirPlantel, 'principal']];
+    if (abierto) acciones.push(['Editar', abrirEdicion], ['Borrar', borrar, 'peligro']);
+
+    tabla('tabla-equipos', equipos.filter(x => x.id_torneo === Number(selTorneo.value)), {
+        columnas: [
+            ['Equipo', x => x.nombre],
+            ['Facultad', x => FACULTADES[x.id_facultad]],
+            ['Capitán', x => nombreJugador(x.ci_capitan) || 'Sin asignar'],
+        ],
+        acciones,
+    });
+}
+
+function abrirAlta() {
+    editando = null;
+    formEquipo.reset();
+    titulo('titulo-equipo', 'Nuevo equipo');
+    formEquipo.hidden = false;
+    formEquipo.nombre.focus();
+}
+
+function abrirEdicion(x) {
+    editando = x.id_equipo;
+    formEquipo.nombre.value = x.nombre;
+    formEquipo.id_facultad.value = x.id_facultad;
+    titulo('titulo-equipo', 'Editar ', [x.nombre]);
+    formEquipo.hidden = false;
+    formEquipo.scrollIntoView({behavior: 'smooth'});
+}
+
+formEquipo.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = {
+        nombre: formEquipo.nombre.value.trim(),
+        id_torneo: Number(selTorneo.value),
+        id_facultad: Number(formEquipo.id_facultad.value),
+    };
+
+    if (editando) {
+        await api('PUT', '/equipos/' + editando, datos);
+    } else {
+        await api('POST', '/equipos', datos);
+    }
+
+    formEquipo.hidden = true;
+    cargar();
+};
+
+async function borrar(x) {
+    if (!confirm('¿Borrar el equipo ' + x.nombre + '?')) return;
+    await api('DELETE', '/equipos/' + x.id_equipo);
+    if (equipoAbierto === x.id_equipo) cambiarTorneo();
+    cargar();
+}
+
+// Muestra el plantel del equipo, con lo que se puede hacer según la etapa del torneo.
+async function abrirPlantel(x) {
+    equipoAbierto = x.id_equipo;
+    const {equipo, plantel} = await api('GET', `/equipos/${x.id_equipo}/plantel`);
+    const abierto = enInscripcion();
+    const docentes = plantel.filter(j => j.tipo === 'docente' || j.tipo === 'funcionario').length;
+
+    titulo('titulo-plantel', 'Plantel de ', [equipo.nombre]);
+    document.getElementById('resumen-plantel').textContent =
+        `${plantel.length} de 10 jugadores (mínimo 5). Docentes y funcionarios: ${docentes} de 2.`;
+
+    formPlantel.hidden = !abierto;
+    const yaEstan = new Set(plantel.map(j => j.ci));
+    formPlantel.ci_jugador.innerHTML = '<option value="">Elegí un jugador</option>' + jugadores
+        .filter(j => j.id_facultad === equipo.id_facultad && !yaEstan.has(j.ci))
+        .sort((a, b) => a.apellido.localeCompare(b.apellido))
+        .map(j => `<option value="${j.ci}">${j.apellido}, ${j.nombre} (${j.tipo})</option>`).join('');
+
+    const acciones = abierto ? [['Hacer capitán', hacerCapitan], ['Quitar', quitar, 'peligro']] : [];
+
+    tabla('tabla-plantel', plantel, {
+        columnas: [
+            ['#', j => j.numero_camiseta],
+            ['Jugador', j => j.nombre + ' ' + j.apellido + (j.ci === equipo.ci_capitan ? ' (capitán)' : '')],
+            ['Cédula', j => j.ci],
+            ['Tipo', j => j.tipo[0].toUpperCase() + j.tipo.slice(1)],
+        ],
+        acciones,
+    });
+
+    const seccion = document.getElementById('seccion-plantel');
+    seccion.hidden = false;
+    seccion.scrollIntoView({behavior: 'smooth'});
+}
+
+formPlantel.onsubmit = async (e) => {
+    e.preventDefault();
+    const numero = formPlantel.numero_camiseta.value;
+    await api('POST', `/equipos/${equipoAbierto}/plantel`, {
+        ci_jugador: Number(formPlantel.ci_jugador.value),
+        numero_camiseta: numero === '' ? null : Number(numero),
+    });
+    formPlantel.reset();
+    cargar();
+};
+
+async function hacerCapitan(j) {
+    await api('PUT', `/equipos/${equipoAbierto}/capitan`, {ci_capitan: j.ci});
+    cargar();
+}
+
+async function quitar(j) {
+    if (!confirm(`¿Quitar a ${j.nombre} ${j.apellido} del plantel?`)) return;
+    await api('DELETE', `/equipos/${equipoAbierto}/plantel/${j.ci}`);
+    cargar();
+}
+
+cargar();
+</script>
+{% endblock %}

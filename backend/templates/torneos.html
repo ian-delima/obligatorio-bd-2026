@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Torneos - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Torneos</h1>
+    <button type="button" class="principal" onclick="abrirAlta()">Crear torneo</button>
+</div>
+
+<p class="ayuda">Cada torneo pasa por tres etapas: inscripción, en curso y finalizado. Los planteles solo se pueden armar durante la inscripción.</p>
+
+<form id="formulario" class="formulario ancho" hidden>
+    <h2 id="titulo-formulario">Nuevo torneo</h2>
+    <label>Nombre
+        <input name="nombre" maxlength="100" required placeholder="Por ejemplo: Torneo Interfacultades 2027">
+    </label>
+    <label>Año
+        <input name="anio" type="number" min="2000" max="2100" required>
+    </label>
+    <label>Semestre
+        <select name="semestre" required>
+            <option value="">Elegí un semestre</option>
+            <option value="1">Primer semestre</option>
+            <option value="2">Segundo semestre</option>
+        </select>
+    </label>
+    <label>Empieza
+        <input name="fecha_inicio" type="date" required>
+    </label>
+    <label>Termina
+        <input name="fecha_fin" type="date" required>
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar torneo</button>
+        <button type="button" onclick="form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<div id="tabla"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('formulario');
+const ETAPAS = {
+    'inscripcion': {texto: 'Inscripción', siguiente: 'en curso', boton: 'Empezar torneo'},
+    'en curso': {texto: 'En curso', siguiente: 'finalizado', boton: 'Finalizar torneo'},
+    'finalizado': {texto: 'Finalizado'},
+};
+let editando = null;
+
+async function cargar() {
+    const {torneos} = await api('GET', '/torneos');
+
+    tabla('tabla', torneos, {
+        columnas: [
+            ['Nombre', t => t.nombre],
+            ['Año', t => t.anio],
+            ['Semestre', t => t.semestre === 1 ? 'Primero' : 'Segundo'],
+            ['Empieza', t => fechaLinda(t.fecha_inicio)],
+            ['Termina', t => fechaLinda(t.fecha_fin)],
+            ['Etapa', etiquetaEtapa],
+            ['', acciones],
+        ],
+    });
+}
+
+function etiquetaEtapa(t) {
+    const s = document.createElement('span');
+    s.className = 'estado ' + t.estado.replace(' ', '-');
+    s.textContent = ETAPAS[t.estado].texto;
+    return s;
+}
+
+function acciones(t) {
+    const caja = document.createElement('span');
+    const b = (texto, fn, clase = '') => {
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = texto;
+        x.className = clase;
+        x.onclick = () => fn(t);
+        caja.appendChild(x);
+    };
+
+    if (ETAPAS[t.estado].siguiente) b(ETAPAS[t.estado].boton, avanzar, 'principal');
+    b('Editar', abrirEdicion);
+    b('Borrar', borrar, 'peligro');
+    return caja;
+}
+
+function abrirAlta() {
+    editando = null;
+    form.reset();
+    form.anio.value = new Date().getFullYear();
+    titulo('titulo-formulario', 'Nuevo torneo');
+    form.hidden = false;
+    form.nombre.focus();
+}
+
+function abrirEdicion(t) {
+    editando = t.id_torneo;
+    form.nombre.value = t.nombre;
+    form.anio.value = t.anio;
+    form.semestre.value = t.semestre;
+    form.fecha_inicio.value = fechaISO(t.fecha_inicio);
+    form.fecha_fin.value = fechaISO(t.fecha_fin);
+    titulo('titulo-formulario', 'Editar ', [t.nombre]);
+    form.hidden = false;
+    form.scrollIntoView({behavior: 'smooth'});
+}
+
+form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.fecha_fin.value <= form.fecha_inicio.value) {
+        mostrar('La fecha de fin tiene que ser posterior a la de inicio', true);
+        return;
+    }
+
+    const datos = {
+        nombre: form.nombre.value.trim(),
+        anio: Number(form.anio.value),
+        semestre: Number(form.semestre.value),
+        fecha_inicio: form.fecha_inicio.value,
+        fecha_fin: form.fecha_fin.value,
+    };
+
+    if (editando) {
+        await api('PUT', '/torneos/' + editando, datos);
+    } else {
+        await api('POST', '/torneos', datos);
+    }
+
+    form.hidden = true;
+    cargar();
+};
+
+async function avanzar(t) {
+    const etapa = ETAPAS[t.estado];
+    if (!confirm(`¿${etapa.boton} "${t.nombre}"? No se puede volver atrás.`)) return;
+    await api('PUT', `/torneos/${t.id_torneo}/estado`, {estado: etapa.siguiente});
+    cargar();
+}
+
+async function borrar(t) {
+    if (!confirm('¿Borrar el torneo ' + t.nombre + '?')) return;
+    await api('DELETE', '/torneos/' + t.id_torneo);
+    cargar();
+}
+
+cargar();
+</script>
+{% endblock %}
