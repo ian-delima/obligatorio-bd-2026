@@ -39,3 +39,14 @@ def reportes():
 @planillero_o_admin
 def planillas():
     return render_template('planillas.html')
+
+
+# Pantalla de ABM de partidos (el fixture).
+@pantallas_bp.get('/partidos')
+@admin
+def partidos():
+    turnos = leer(
+        'SELECT id_turno, CAST(hora_inicio AS CHAR) AS desde, CAST(hora_fin AS CHAR) AS hasta '
+        'FROM turno ORDER BY hora_inicio'
+    )
+    return render_template('partidos.html', turnos=turnos)

@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Partidos - Torneo Interfacultades{% endblock %}
+
+{% block contenido %}
+<div class="encabezado">
+    <h1>Partidos</h1>
+    <button type="button" class="principal" onclick="abrirAlta()">Programar partido</button>
+</div>
+
+<label class="elegir-partido">Torneo
+    <select id="torneo" onchange="dibujar()"></select>
+</label>
+
+<form id="formulario" class="formulario ancho" hidden>
+    <h2 id="titulo-formulario">Programar partido</h2>
+    <label>Torneo
+        <select name="id_torneo" required onchange="llenarEquipos()"></select>
+    </label>
+    <label>Número de fecha
+        <input name="numero_fecha" type="number" min="1" max="99" required>
+    </label>
+    <label>Local
+        <select name="id_equipo_local" required></select>
+    </label>
+    <label>Visitante
+        <select name="id_equipo_visitante" required></select>
+    </label>
+    <label>Día
+        <input name="dia" type="date" required>
+    </label>
+    <label>Turno
+        <select name="id_turno" required>
+            <option value="">Elegí un turno</option>
+            {% for t in turnos %}
+                <option value="{{ t.id_turno }}">{{ t.desde[:5] }} a {{ t.hasta[:5] }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Cancha
+        <select name="cancha" required></select>
+    </label>
+    <label id="campo-estado">Estado
+        <select name="estado">
+            <option value="programado">Programado</option>
+            <option value="postergado">Postergado</option>
+            <option value="cancelado">Cancelado</option>
+        </select>
+    </label>
+    <div class="botones">
+        <button type="submit" class="principal">Guardar partido</button>
+        <button type="button" onclick="form.hidden = true">Cancelar</button>
+    </div>
+</form>
+
+<div id="fixture"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TURNOS = Object.fromEntries({{ turnos | tojson }}.map(t => [t.id_turno, Number(t.desde.slice(0, 2)) + ' a ' + Number(t.hasta.slice(0, 2)) + ' h']));
+const ESTADOS = {programado: 'Programado', jugado: 'Jugado', postergado: 'Postergado', cancelado: 'Cancelado'};
+const form = document.getElementById('formulario');
+const selTorneo = document.getElementById('torneo');
+let partidos = [], equipos = [], torneos = [], canchas = [];
+let editando = null;
+
+async function cargar() {
+    const [p, e, t, c] = await Promise.all([
+        api('GET', '/partidos'),
+        api('GET', '/equipos'),
+        api('GET', '/torneos'),
+        api('GET', '/canchas'),
+    ]);
+    partidos = p.partidos;
+    equipos = e.equipos;
+    torneos = t.torneos;
+    canchas = c.canchas;
+
+    const elegido = selTorneo.value;
+    const opciones = torneos.map(x => `<option value="${x.id_torneo}">${x.nombre}</option>`).join('');
+    selTorneo.innerHTML = opciones;
+    form.id_torneo.innerHTML = '<option value="">Elegí un torneo</option>' + opciones;
+    selTorneo.value = elegido || (torneos.find(x => x.estado === 'en curso') || torneos.at(-1))?.id_torneo || '';
+
+    form.cancha.innerHTML = '<option value="">Elegí una cancha</option>' + canchas.map(x =>
+        `<option value="${x.id_complejo}|${x.nombre_cancha}">${x.nombre_complejo}, ${x.nombre_cancha}</option>`
+    ).join('');
+
+    dibujar();
+}
+
+const equipo = id => equipos.find(x => x.id_equipo === id)?.nombre || id;
+
+function cancha(p) {
+    const c = canchas.find(x => x.id_complejo === p.id_complejo && x.nombre_cancha === p.nombre_cancha);
+    return c ? c.nombre_complejo + ', ' + c.nombre_cancha : p.nombre_cancha;
+}
+
+function etiquetaEstado(estado) {
+    const s = document.createElement('span');
+    s.className = 'estado ' + estado;
+    s.textContent = ESTADOS[estado];
+    return s;
+}
+
+// Botones de cada partido según su estado.
+function acciones(p) {
+    const caja = document.createElement('span');
+    const b = (texto, fn, clase = '') => {
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = texto;
+        x.className = clase;
+        x.onclick = () => fn(p);
+        caja.appendChild(x);
+    };
+
+    if (p.estado === 'jugado') {
+        b('Ver planilla', () => location.href = '/panel/planillas#' + p.id_partido);
+    } else {
+        if (p.estado !== 'cancelado') {
+            b('Editar', abrirEdicion);
+            b('Marcar jugado', marcarJugado);
+        }
+        b('Borrar', borrar, 'peligro');
+    }
+    return caja;
+}
+
+// Dibuja el fixture del torneo elegido, una tabla por fecha.
+function dibujar() {
+    const id = Number(selTorneo.value);
+    const delTorneo = partidos.filter(p => p.id_torneo === id);
+    const fechas = [...new Set(delTorneo.map(p => p.numero_fecha))].sort((a, b) => a - b);
+    const cont = document.getElementById('fixture');
+
+    if (!fechas.length) {
+        cont.innerHTML = '<p class="vacio">Este torneo todavía no tiene partidos programados.</p>';
+        return;
+    }
+
+    cont.innerHTML = fechas.map(f => `<h2>Fecha ${f}</h2><div id="fecha-${f}"></div>`).join('');
+
+    for (const f of fechas) {
+        const filas = delTorneo
+            .filter(p => p.numero_fecha === f)
+            .sort((a, b) => fechaISO(a.dia).localeCompare(fechaISO(b.dia)) || a.id_turno - b.id_turno);
+
+        tabla('fecha-' + f, filas, {
+            columnas: [
+                ['Partido', p => equipo(p.id_equipo_local) + ' vs ' + equipo(p.id_equipo_visitante)],
+                ['Día', p => fechaLinda(p.dia)],
+                ['Turno', p => TURNOS[p.id_turno]],
+                ['Cancha', cancha],
+                ['Estado', p => etiquetaEstado(p.estado)],
+                ['', acciones],
+            ],
+        });
+    }
+}
+
+// Llena las listas de local y visitante con los equipos del torneo elegido en el formulario.
+function llenarEquipos() {
+    const id = Number(form.id_torneo.value);
+    const opciones = '<option value="">Elegí un equipo</option>' + equipos
+        .filter(e => e.id_torneo === id)
+        .map(e => `<option value="${e.id_equipo}">${e.nombre}</option>`).join('');
+    form.id_equipo_local.innerHTML = opciones;
+    form.id_equipo_visitante.innerHTML = opciones;
+}
+
+function abrirAlta() {
+    editando = null;
+    form.reset();
+    form.id_torneo.disabled = false;
+    form.id_torneo.value = selTorneo.value;
+    llenarEquipos();
+    document.getElementById('campo-estado').hidden = true;
+    titulo('titulo-formulario', 'Programar partido');
+    form.hidden = false;
+    form.numero_fecha.focus();
+}
+
+function abrirEdicion(p) {
+    editando = p.id_partido;
+    form.id_torneo.value = p.id_torneo;
+    form.id_torneo.disabled = true;
+    llenarEquipos();
+    form.numero_fecha.value = p.numero_fecha;
+    form.id_equipo_local.value = p.id_equipo_local;
+    form.id_equipo_visitante.value = p.id_equipo_visitante;
+    form.dia.value = fechaISO(p.dia);
+    form.id_turno.value = p.id_turno;
+    form.cancha.value = p.id_complejo + '|' + p.nombre_cancha;
+    form.estado.value = p.estado;
+    document.getElementById('campo-estado').hidden = false;
+    titulo('titulo-formulario', 'Editar ', [equipo(p.id_equipo_local) + ' vs ' + equipo(p.id_equipo_visitante)]);
+    form.hidden = false;
+    form.scrollIntoView({behavior: 'smooth'});
+}
+
+form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.id_equipo_local.value === form.id_equipo_visitante.value) {
+        mostrar('El local y el visitante tienen que ser equipos distintos', true);
+        return;
+    }
+
+    const [idComplejo, ...nombre] = form.cancha.value.split('|');
+    const datos = {
+        id_torneo: Number(form.id_torneo.value),
+        numero_fecha: Number(form.numero_fecha.value),
+        id_equipo_local: Number(form.id_equipo_local.value),
+        id_equipo_visitante: Number(form.id_equipo_visitante.value),
+        dia: form.dia.value,
+        id_turno: Number(form.id_turno.value),
+        id_complejo: Number(idComplejo),
+        nombre_cancha: nombre.join('|'),
+    };
+
+    if (editando) {
+        await api('PUT', '/partidos/' + editando, {...datos, estado: form.estado.value});
+    } else {
+        await api('POST', '/partidos', datos);
+    }
+
+    form.hidden = true;
+    cargar();
+};
+
+async function marcarJugado(p) {
+    await api('PUT', `/partidos/${p.id_partido}/jugado`);
+    cargar();
+}
+
+async function borrar(p) {
+    if (!confirm(`¿Borrar el partido ${equipo(p.id_equipo_local)} vs ${equipo(p.id_equipo_visitante)}?`)) return;
+    await api('DELETE', '/partidos/' + p.id_partido);
+    cargar();
+}
+
+cargar();
+</script>
+{% endblock %}
