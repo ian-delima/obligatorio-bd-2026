@@ -158,11 +158,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/prueba-admin")
-@requiere_rol("administrador")
-def prueba_admin():
-    return "Si ves esto, sos admin"
-
 
 @app.route("/jugadores")
 @requiere_rol("administrador")
