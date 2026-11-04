@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      - mysql_datos:/var/lib/mysql
+      - ./db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/02_datos.sql:/docker-entrypoint-initdb.d/02_datos.sql:ro
+      - ./db/03_usuarios.sql:/docker-entrypoint-initdb.d/03_usuarios.sql:ro
+      - ./db/04_reportes.sql:/docker-entrypoint-initdb.d/04_reportes.sql:ro
+      - ./db/05_docker_usuarios.sh:/docker-entrypoint-initdb.d/05_docker_usuarios.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: obligatorio_bd
+    ports:
+      - "5001:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_datos:
